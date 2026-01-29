@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>家庭积分系统</title>
+    <title>积分系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
@@ -16,12 +16,19 @@
             -webkit-tap-highlight-color: transparent;
         }
         
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
         body {
             background-color: #f8f9fa;
             color: #333;
             line-height: 1.6;
             font-size: 14px;
-            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
         }
         
         /* 移动端适配 */
@@ -32,18 +39,24 @@
             
             .container {
                 padding: 10px;
+                width: 100%;
+                max-width: 100%;
+                overflow: hidden;
             }
             
             .total-points-container {
                 padding: 15px;
                 flex-direction: column;
                 gap: 15px;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             .total-points-display {
                 flex-direction: column;
                 text-align: center;
                 gap: 10px;
+                width: 100%;
             }
             
             .total-points-value {
@@ -53,25 +66,35 @@
             .week-selector {
                 gap: 8px;
                 margin: 15px 0;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 5px;
+                width: 100%;
             }
             
             .week-btn {
                 padding: 8px 12px;
                 font-size: 0.9rem;
+                white-space: nowrap;
+                flex-shrink: 0;
             }
             
             .content-wrapper {
                 grid-template-columns: 1fr;
                 gap: 15px;
+                width: 100%;
             }
             
             .categories-container {
                 grid-template-columns: 1fr;
                 gap: 15px;
+                width: 100%;
             }
             
             .category {
                 padding: 15px;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             .category-title {
@@ -80,10 +103,17 @@
             
             .item {
                 padding: 10px 0;
+                flex-wrap: wrap;
+            }
+            
+            .item-name {
+                width: 100%;
+                margin-bottom: 5px;
             }
             
             .item-controls {
-                gap: 5px;
+                width: 100%;
+                justify-content: flex-end;
             }
             
             .score-btn {
@@ -92,9 +122,11 @@
                 font-size: 1rem;
             }
             
-            .summary-panel {
+            .score-panel {
                 padding: 15px;
                 position: static;
+                width: 100%;
+                order: 2;
             }
             
             .score-value {
@@ -119,23 +151,31 @@
                 gap: 8px;
             }
             
-            .rewards-punishments-container {
+            .rewards-container, .punishments-container {
                 grid-template-columns: 1fr;
                 gap: 15px;
+                width: 100%;
             }
             
             .rewards-section, .punishments-section {
                 padding: 15px;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             .reward-item, .punishment-item {
                 padding: 10px 12px;
                 margin-bottom: 8px;
+                flex-wrap: wrap;
             }
             
             .reward-actions, .punishment-actions {
-                flex-direction: column;
+                flex-direction: row;
                 gap: 5px;
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-end;
             }
             
             .exchange-reward-btn {
@@ -148,6 +188,7 @@
                 width: 95%;
                 max-width: 95%;
                 margin: 10px;
+                max-height: 85vh;
             }
             
             .history-summary {
@@ -167,24 +208,31 @@
                 flex-direction: column;
                 gap: 10px;
             }
-        }
-        
-        @media (max-width: 480px) {
-            .navbar {
-                padding: 12px 15px;
-            }
             
-            .nav-title {
-                font-size: 1.4rem;
-            }
-            
+            /* 导航栏移动端优化 */
             .nav-links {
                 gap: 8px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 5px;
             }
             
             .nav-link {
                 padding: 6px 10px;
                 font-size: 0.9rem;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 12px 10px;
+            }
+            
+            .nav-title {
+                font-size: 1.3rem;
             }
             
             .total-points-value {
@@ -195,8 +243,14 @@
                 padding: 8px 12px;
                 font-size: 0.8rem;
             }
+            
+            .modal-content {
+                width: 98%;
+                max-width: 98%;
+                padding: 15px;
+            }
         }
-        
+
         /* 导航栏样式 */
         .navbar {
             background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
@@ -209,11 +263,13 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            width: 100%;
         }
         
         .nav-title {
             font-size: 1.8rem;
             font-weight: 700;
+            white-space: nowrap;
         }
         
         .nav-links {
@@ -227,6 +283,7 @@
             padding: 8px 16px;
             border-radius: 8px;
             transition: background-color 0.3s;
+            white-space: nowrap;
         }
         
         .nav-link:hover {
@@ -243,6 +300,8 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         /* 累计积分显示 */
@@ -255,6 +314,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .total-points-display {
@@ -287,6 +348,7 @@
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
         
         .exchange-btn:hover {
@@ -305,6 +367,7 @@
             cursor: pointer;
             font-size: 0.9rem;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
         
         .points-history-btn:hover {
@@ -330,6 +393,7 @@
         /* 页面内容区 */
         .page-content {
             display: none;
+            width: 100%;
         }
         
         .page-content.active {
@@ -343,6 +407,7 @@
             gap: 20px;
             margin: 25px 0;
             flex-wrap: wrap;
+            width: 100%;
         }
         
         .week-btn {
@@ -367,15 +432,17 @@
         }
         
         .content-wrapper {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 25px;
+            width: 100%;
         }
         
         .categories-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
+            width: 100%;
         }
         
         @media (max-width: 1100px) {
@@ -390,6 +457,8 @@
             padding: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .category:hover {
@@ -422,6 +491,7 @@
             align-items: center;
             padding: 12px 0;
             border-bottom: 1px dashed #eee;
+            width: 100%;
         }
         
         .item:last-child {
@@ -508,16 +578,18 @@
             color: #3498db;
         }
         
-        .summary-panel {
+        /* 积分统计面板放在底部 */
+        .score-panel {
             background-color: white;
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            position: sticky;
-            top: 100px;
+            margin-top: 30px;
+            width: 100%;
+            box-sizing: border-box;
         }
         
-        .summary-title {
+        .score-panel-title {
             font-size: 1.6rem;
             color: #2c3e50;
             margin-bottom: 20px;
@@ -631,18 +703,21 @@
             background-color: #e67e22;
         }
         
-        /* 兑换页面样式 */
-        .rewards-punishments-container {
+        /* 奖励页面样式 */
+        .rewards-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 25px;
+            width: 100%;
         }
         
-        .rewards-section, .punishments-section {
+        .rewards-section {
             background-color: white;
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .section-title {
@@ -660,7 +735,7 @@
             color: #4a6ee0;
         }
         
-        .reward-category, .punishment-category {
+        .reward-category {
             margin-bottom: 25px;
         }
         
@@ -677,7 +752,7 @@
             border-left-color: #e74c3c;
         }
         
-        .reward-item, .punishment-item {
+        .reward-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -686,6 +761,7 @@
             background-color: #f8f9fa;
             border-radius: 8px;
             border-left: 4px solid #27ae60;
+            width: 100%;
         }
         
         .punishment-item {
@@ -777,6 +853,23 @@
             font-style: italic;
         }
         
+        /* 惩罚页面样式 */
+        .punishments-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            width: 100%;
+        }
+        
+        .punishments-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
         /* 积分历史记录页面 */
         .history-section {
             background-color: white;
@@ -845,6 +938,7 @@
             max-height: 90vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         .modal-header {
@@ -888,6 +982,7 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
+            box-sizing: border-box;
         }
         
         .modal-actions {
@@ -972,6 +1067,7 @@
             font-size: 0.9rem;
             padding-top: 20px;
             border-top: 1px solid #eee;
+            width: 100%;
         }
         
         /* 积分历史记录模态框 */
@@ -1024,7 +1120,7 @@
         }
         
         /* 分类管理样式 */
-        .categories-management-container {
+        .categories-management-container, .punishment-categories-container {
             background-color: white;
             border-radius: 12px;
             padding: 25px;
@@ -1032,9 +1128,10 @@
             margin-top: 20px;
             flex: 1;
             overflow-y: auto;
+            max-height: 400px;
         }
         
-        .categories-management-header {
+        .categories-management-header, .punishment-categories-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1042,14 +1139,13 @@
             flex-shrink: 0;
         }
         
-        .categories-list {
+        .categories-list, .punishment-categories-list {
             margin-top: 20px;
             overflow-y: auto;
-            max-height: 400px;
             padding-right: 10px;
         }
         
-        .category-item {
+        .category-item, .punishment-category-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1060,12 +1156,16 @@
             border-left: 4px solid #4a6ee0;
         }
         
-        .category-name {
+        .punishment-category-item {
+            border-left-color: #e74c3c;
+        }
+        
+        .category-name, .punishment-category-name {
             font-weight: 600;
             font-size: 1.1rem;
         }
         
-        .category-actions {
+        .category-actions, .punishment-category-actions {
             display: flex;
             gap: 10px;
         }
@@ -1157,6 +1257,16 @@
         .safe-area-bottom {
             padding-bottom: env(safe-area-inset-bottom, 20px);
         }
+        
+        /* 惩罚分类管理按钮 */
+        .manage-punishment-categories-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .manage-punishment-categories-btn:hover {
+            background-color: #8e44ad;
+        }
     </style>
 </head>
 <body class="safe-area-bottom">
@@ -1167,7 +1277,8 @@
         </div>
         <div class="nav-links">
             <a href="#" class="nav-link active" data-page="points">积分明细</a>
-            <a href="#" class="nav-link" data-page="exchange">奖励兑换</a>
+            <a href="#" class="nav-link" data-page="rewards">奖励兑换</a>
+            <a href="#" class="nav-link" data-page="punishments">惩罚项</a>
         </div>
     </nav>
     
@@ -1185,7 +1296,7 @@
                 <button class="points-history-btn" id="showHistoryBtn">
                     <i class="fas fa-history"></i> 查看积分历史
                 </button>
-                <button class="exchange-btn" id="goToExchangeBtn">
+                <button class="exchange-btn" id="goToRewardsBtn">
                     <i class="fas fa-gift"></i> 前往兑换奖励
                 </button>
             </div>
@@ -1204,8 +1315,9 @@
                     <!-- 分类将通过JavaScript动态生成 -->
                 </div>
                 
-                <div class="summary-panel">
-                    <h2 class="summary-title">积分统计</h2>
+                <!-- 积分统计面板放在底部 -->
+                <div class="score-panel">
+                    <h2 class="score-panel-title">积分统计</h2>
                     
                     <div class="score-display">
                         <div class="today-score">
@@ -1253,10 +1365,9 @@
             </div>
         </div>
         
-        <!-- 兑换页面 -->
-        <div class="page-content" id="exchange-page">
-            <div class="rewards-punishments-container">
-                <!-- 奖励项 -->
+        <!-- 奖励页面 -->
+        <div class="page-content" id="rewards-page">
+            <div class="rewards-container">
                 <div class="rewards-section">
                     <div class="section-title">
                         <span><i class="fas fa-gift"></i> 奖励项</span>
@@ -1269,14 +1380,28 @@
                         <!-- 奖励项将通过JavaScript动态生成 -->
                     </div>
                 </div>
-                
-                <!-- 惩罚项 -->
+            </div>
+            
+            <div class="motivation">
+                <p>你的努力不是为了做给谁看，也不是为了得积分</p>
+                <p>而是为了做一个连自己都羡慕的人！</p>
+            </div>
+        </div>
+        
+        <!-- 惩罚页面 -->
+        <div class="page-content" id="punishments-page">
+            <div class="punishments-container">
                 <div class="punishments-section">
                     <div class="section-title">
                         <span><i class="fas fa-exclamation-triangle"></i> 惩罚项</span>
-                        <button class="add-item-btn" id="addPunishmentBtn">
-                            <i class="fas fa-plus"></i> 添加惩罚
-                        </button>
+                        <div>
+                            <button class="action-btn manage-punishment-categories-btn" id="managePunishmentCategoriesBtn" style="margin-right: 10px;">
+                                <i class="fas fa-list"></i> 管理惩罚分类
+                            </button>
+                            <button class="add-item-btn" id="addPunishmentBtn">
+                                <i class="fas fa-plus"></i> 添加惩罚
+                            </button>
+                        </div>
                     </div>
                     
                     <div id="punishmentsContainer">
@@ -1286,13 +1411,13 @@
             </div>
             
             <div class="motivation">
-                <p>你的努力不是为了做给谁看，也不是为了得积分</p>
-                <p>而是为了做一个连自己都羡慕的人！</p>
+                <p>奖励是一种激励，惩罚并不是没有爱。</p>
+                <p>知错能改，善莫大焉！</p>
             </div>
         </div>
         
         <footer>
-            <p>家庭积分系统 &copy; 2023 | 每日进步一点点，成就更好的自己！</p>
+            <p>家庭积分系统 &copy; 2026 | 每日进步一点点，成就更好的自己！</p>
         </footer>
     </div>
     
@@ -1338,39 +1463,68 @@
         </div>
     </div>
     
-    <!-- 添加/编辑奖励/惩罚项目模态框 -->
-    <div class="modal" id="rpModal">
+    <!-- 添加/编辑奖励项目模态框 -->
+    <div class="modal" id="rewardModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="rpModalTitle">添加奖励项</h3>
-                <button class="close-btn" id="closeRpModalBtn">&times;</button>
+                <h3 class="modal-title" id="rewardModalTitle">添加奖励项</h3>
+                <button class="close-btn" id="closeRewardModalBtn">&times;</button>
             </div>
             
-            <form id="rpForm">
+            <form id="rewardForm">
                 <div class="form-group">
-                    <label for="rpName">项目名称</label>
-                    <input type="text" id="rpName" required>
+                    <label for="rewardName">项目名称</label>
+                    <input type="text" id="rewardName" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="rpCategory">分类</label>
-                    <select id="rpCategory" required>
-                        <!-- 奖励和惩罚的分类选项会动态生成 -->
+                    <label for="rewardCategory">分类</label>
+                    <select id="rewardCategory" required>
+                        <!-- 奖励分类选项会动态生成 -->
                     </select>
                 </div>
                 
-                <div class="form-group" id="rpPointsGroup">
-                    <label for="rpPoints">所需积分</label>
-                    <input type="number" id="rpPoints" required>
-                </div>
-                
-                <div class="form-group" id="rpPunishmentGroup" style="display: none;">
-                    <label for="rpPunishmentContent">惩罚内容</label>
-                    <textarea id="rpPunishmentContent" rows="3"></textarea>
+                <div class="form-group" id="rewardPointsGroup">
+                    <label for="rewardPoints">所需积分</label>
+                    <input type="number" id="rewardPoints" required>
                 </div>
                 
                 <div class="modal-actions">
-                    <button type="button" class="cancel-btn" id="cancelRpBtn">取消</button>
+                    <button type="button" class="cancel-btn" id="cancelRewardBtn">取消</button>
+                    <button type="submit" class="save-btn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑惩罚项目模态框 -->
+    <div class="modal" id="punishmentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="punishmentModalTitle">添加惩罚项</h3>
+                <button class="close-btn" id="closePunishmentModalBtn">&times;</button>
+            </div>
+            
+            <form id="punishmentForm">
+                <div class="form-group">
+                    <label for="punishmentName">惩罚项目名称</label>
+                    <input type="text" id="punishmentName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="punishmentCategory">惩罚分类</label>
+                    <select id="punishmentCategory" required>
+                        <!-- 惩罚分类选项会动态生成 -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="punishmentContent">惩罚内容</label>
+                    <textarea id="punishmentContent" rows="3" required></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelPunishmentBtn">取消</button>
                     <button type="submit" class="save-btn">保存</button>
                 </div>
             </form>
@@ -1460,6 +1614,33 @@
         </div>
     </div>
     
+    <!-- 惩罚分类管理模态框 -->
+    <div class="modal" id="punishmentCategoriesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">管理惩罚分类</h3>
+                <button class="close-btn" id="closePunishmentCategoriesModalBtn">&times;</button>
+            </div>
+            
+            <div class="punishment-categories-container">
+                <div class="punishment-categories-header">
+                    <h4>当前惩罚分类列表</h4>
+                    <button class="add-item-btn" id="addPunishmentCategoryBtn">
+                        <i class="fas fa-plus"></i> 添加新分类
+                    </button>
+                </div>
+                
+                <div class="punishment-categories-list" id="punishmentCategoriesList">
+                    <!-- 惩罚分类列表将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn" id="cancelPunishmentCategoriesBtn">完成</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- 添加/编辑分类模态框 -->
     <div class="modal" id="categoryModal">
         <div class="modal-content">
@@ -1502,6 +1683,28 @@
                 
                 <div class="modal-actions">
                     <button type="button" class="cancel-btn" id="cancelCategoryBtn">取消</button>
+                    <button type="submit" class="save-btn">保存分类</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑惩罚分类模态框 -->
+    <div class="modal" id="punishmentCategoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="punishmentCategoryModalTitle">添加惩罚分类</h3>
+                <button class="close-btn" id="closePunishmentCategoryModalBtn">&times;</button>
+            </div>
+            
+            <form id="punishmentCategoryForm">
+                <div class="form-group">
+                    <label for="punishmentCategoryName">分类名称</label>
+                    <input type="text" id="punishmentCategoryName" required>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelPunishmentCategoryBtn">取消</button>
                     <button type="submit" class="save-btn">保存分类</button>
                 </div>
             </form>
@@ -1622,9 +1825,11 @@
             "小成就": "fas fa-trophy",
             "品行": "fas fa-heart",
             "家庭表现": "fas fa-users",
-            "灵修生活": "fas fa-spa",
-            "学习类": "fas fa-pencil-alt"
+            "灵修生活": "fas fa-spa"
         };
+
+        // 默认惩罚分类
+        const defaultPunishmentCategories = ["学习方面", "生活习惯", "属灵方面"];
 
         // 全局变量
         let scoreData = JSON.parse(localStorage.getItem('familyScoreData')) || initializeScoreData();
@@ -1632,6 +1837,7 @@
         let rewardsData = JSON.parse(localStorage.getItem('familyRewardsData')) || initialRewards;
         let punishmentsData = JSON.parse(localStorage.getItem('familyPunishmentsData')) || initialPunishments;
         let categoryIcons = JSON.parse(localStorage.getItem('familyCategoryIcons')) || defaultCategoryIcons;
+        let punishmentCategories = JSON.parse(localStorage.getItem('familyPunishmentCategories')) || defaultPunishmentCategories;
         let currentWeek = 'current';
         let currentDay = new Date().getDay(); // 0=周日, 1=周一, ..., 6=周六
         if (currentDay === 0) currentDay = 7; // 调整为7=周日
@@ -1678,6 +1884,7 @@
             localStorage.setItem('familyRewardsData', JSON.stringify(rewardsData));
             localStorage.setItem('familyPunishmentsData', JSON.stringify(punishmentsData));
             localStorage.setItem('familyCategoryIcons', JSON.stringify(categoryIcons));
+            localStorage.setItem('familyPunishmentCategories', JSON.stringify(punishmentCategories));
         }
 
         // 计算累计积分（实时统计所有历史得分）
@@ -2119,18 +2326,12 @@
             container.innerHTML = '';
             
             // 按分类分组惩罚项
-            const punishmentCategories = {
-                "学习方面": [],
-                "生活习惯": [],
-                "属灵方面": []
-            };
-            
+            const punishmentCategories = {};
             punishmentsData.forEach(punishment => {
-                if (punishmentCategories[punishment.category]) {
-                    punishmentCategories[punishment.category].push(punishment);
-                } else {
-                    punishmentCategories["学习方面"].push(punishment);
+                if (!punishmentCategories[punishment.category]) {
+                    punishmentCategories[punishment.category] = [];
                 }
+                punishmentCategories[punishment.category].push(punishment);
             });
             
             // 渲染每个惩罚分类
@@ -2235,11 +2436,11 @@
         function editReward(rewardId) {
             const reward = rewardsData.find(r => r.id === rewardId);
             
-            document.getElementById('rpModalTitle').textContent = '编辑奖励项';
-            document.getElementById('rpName').value = reward.name;
+            document.getElementById('rewardModalTitle').textContent = '编辑奖励项';
+            document.getElementById('rewardName').value = reward.name;
             
             // 设置分类选项
-            const categorySelect = document.getElementById('rpCategory');
+            const categorySelect = document.getElementById('rewardCategory');
             categorySelect.innerHTML = `
                 <option value="100分" ${reward.category === '100分' ? 'selected' : ''}>100分</option>
                 <option value="200分" ${reward.category === '200分' ? 'selected' : ''}>200分</option>
@@ -2249,65 +2450,87 @@
                 <option value="500分" ${reward.category === '500分' ? 'selected' : ''}>500分</option>
             `;
             
-            document.getElementById('rpPoints').value = reward.points;
-            
-            // 显示积分输入框，隐藏惩罚内容框
-            document.getElementById('rpPointsGroup').style.display = 'block';
-            document.getElementById('rpPunishmentGroup').style.display = 'none';
+            document.getElementById('rewardPoints').value = reward.points;
             
             // 设置表单提交处理程序
-            const form = document.getElementById('rpForm');
+            const form = document.getElementById('rewardForm');
             form.onsubmit = function(e) {
                 e.preventDefault();
                 
-                reward.name = document.getElementById('rpName').value;
-                reward.category = document.getElementById('rpCategory').value;
-                reward.points = parseInt(document.getElementById('rpPoints').value);
+                reward.name = document.getElementById('rewardName').value;
+                reward.category = document.getElementById('rewardCategory').value;
+                reward.points = parseInt(document.getElementById('rewardPoints').value);
                 
                 saveData();
                 renderRewards();
-                closeModal('rpModal');
+                closeModal('rewardModal');
             };
             
-            openModal('rpModal');
+            openModal('rewardModal');
         }
 
         // 编辑惩罚项
         function editPunishment(punishmentId) {
             const punishment = punishmentsData.find(p => p.id === punishmentId);
             
-            document.getElementById('rpModalTitle').textContent = '编辑惩罚项';
-            document.getElementById('rpName').value = punishment.name;
+            document.getElementById('punishmentModalTitle').textContent = '编辑惩罚项';
+            document.getElementById('punishmentName').value = punishment.name;
             
             // 设置分类选项
-            const categorySelect = document.getElementById('rpCategory');
-            categorySelect.innerHTML = `
-                <option value="学习方面" ${punishment.category === '学习方面' ? 'selected' : ''}>学习方面</option>
-                <option value="生活习惯" ${punishment.category === '生活习惯' ? 'selected' : ''}>生活习惯</option>
-                <option value="属灵方面" ${punishment.category === '属灵方面' ? 'selected' : ''}>属灵方面</option>
-            `;
+            const categorySelect = document.getElementById('punishmentCategory');
+            categorySelect.innerHTML = '';
+            punishmentCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                if (category === punishment.category) {
+                    option.selected = true;
+                }
+                categorySelect.appendChild(option);
+            });
             
-            document.getElementById('rpPunishmentContent').value = punishment.content;
+            // 添加"新建分类"选项
+            const newOption = document.createElement('option');
+            newOption.value = 'new';
+            newOption.textContent = '➕ 新建分类...';
+            categorySelect.appendChild(newOption);
             
-            // 显示惩罚内容框，隐藏积分输入框
-            document.getElementById('rpPointsGroup').style.display = 'none';
-            document.getElementById('rpPunishmentGroup').style.display = 'block';
+            document.getElementById('punishmentContent').value = punishment.content;
+            
+            // 监听分类选择变化
+            categorySelect.addEventListener('change', function() {
+                if (this.value === 'new') {
+                    // 用户选择新建分类，弹出惩罚分类管理
+                    closeModal('punishmentModal');
+                    showPunishmentCategoriesManagement();
+                    // 保存当前表单数据
+                    sessionStorage.setItem('pendingPunishmentData', JSON.stringify({
+                        name: document.getElementById('punishmentName').value,
+                        content: document.getElementById('punishmentContent').value
+                    }));
+                }
+            });
             
             // 设置表单提交处理程序
-            const form = document.getElementById('rpForm');
+            const form = document.getElementById('punishmentForm');
             form.onsubmit = function(e) {
                 e.preventDefault();
                 
-                punishment.name = document.getElementById('rpName').value;
-                punishment.category = document.getElementById('rpCategory').value;
-                punishment.content = document.getElementById('rpPunishmentContent').value;
+                if (categorySelect.value === 'new') {
+                    alert('请先创建新分类或选择现有分类');
+                    return;
+                }
+                
+                punishment.name = document.getElementById('punishmentName').value;
+                punishment.category = document.getElementById('punishmentCategory').value;
+                punishment.content = document.getElementById('punishmentContent').value;
                 
                 saveData();
                 renderPunishments();
-                closeModal('rpModal');
+                closeModal('punishmentModal');
             };
             
-            openModal('rpModal');
+            openModal('punishmentModal');
         }
 
         // 删除奖励项
@@ -2332,11 +2555,11 @@
 
         // 添加新奖励项
         function addNewReward() {
-            document.getElementById('rpModalTitle').textContent = '添加奖励项';
-            document.getElementById('rpForm').reset();
+            document.getElementById('rewardModalTitle').textContent = '添加奖励项';
+            document.getElementById('rewardForm').reset();
             
             // 设置分类选项
-            const categorySelect = document.getElementById('rpCategory');
+            const categorySelect = document.getElementById('rewardCategory');
             categorySelect.innerHTML = `
                 <option value="100分">100分</option>
                 <option value="200分">200分</option>
@@ -2346,18 +2569,14 @@
                 <option value="500分">500分</option>
             `;
             
-            // 显示积分输入框，隐藏惩罚内容框
-            document.getElementById('rpPointsGroup').style.display = 'block';
-            document.getElementById('rpPunishmentGroup').style.display = 'none';
-            
             // 设置表单提交处理程序
-            const form = document.getElementById('rpForm');
+            const form = document.getElementById('rewardForm');
             form.onsubmit = function(e) {
                 e.preventDefault();
                 
-                const name = document.getElementById('rpName').value;
-                const category = document.getElementById('rpCategory').value;
-                const points = parseInt(document.getElementById('rpPoints').value);
+                const name = document.getElementById('rewardName').value;
+                const category = document.getElementById('rewardCategory').value;
+                const points = parseInt(document.getElementById('rewardPoints').value);
                 
                 // 生成新ID
                 const newId = rewardsData.length > 0 
@@ -2374,37 +2593,60 @@
                 rewardsData.push(newReward);
                 saveData();
                 renderRewards();
-                closeModal('rpModal');
+                closeModal('rewardModal');
             };
             
-            openModal('rpModal');
+            openModal('rewardModal');
         }
 
         // 添加新惩罚项
         function addNewPunishment() {
-            document.getElementById('rpModalTitle').textContent = '添加惩罚项';
-            document.getElementById('rpForm').reset();
+            document.getElementById('punishmentModalTitle').textContent = '添加惩罚项';
+            document.getElementById('punishmentForm').reset();
             
             // 设置分类选项
-            const categorySelect = document.getElementById('rpCategory');
-            categorySelect.innerHTML = `
-                <option value="学习方面">学习方面</option>
-                <option value="生活习惯">生活习惯</option>
-                <option value="属灵方面">属灵方面</option>
-            `;
+            const categorySelect = document.getElementById('punishmentCategory');
+            categorySelect.innerHTML = '';
+            punishmentCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
             
-            // 显示惩罚内容框，隐藏积分输入框
-            document.getElementById('rpPointsGroup').style.display = 'none';
-            document.getElementById('rpPunishmentGroup').style.display = 'block';
+            // 添加"新建分类"选项
+            const newOption = document.createElement('option');
+            newOption.value = 'new';
+            newOption.textContent = '➕ 新建分类...';
+            categorySelect.appendChild(newOption);
+            
+            // 监听分类选择变化
+            categorySelect.addEventListener('change', function() {
+                if (this.value === 'new') {
+                    // 用户选择新建分类，弹出惩罚分类管理
+                    closeModal('punishmentModal');
+                    showPunishmentCategoriesManagement();
+                    // 保存当前表单数据
+                    sessionStorage.setItem('pendingPunishmentData', JSON.stringify({
+                        name: document.getElementById('punishmentName').value,
+                        content: document.getElementById('punishmentContent').value
+                    }));
+                }
+            });
             
             // 设置表单提交处理程序
-            const form = document.getElementById('rpForm');
+            const form = document.getElementById('punishmentForm');
             form.onsubmit = function(e) {
                 e.preventDefault();
                 
-                const name = document.getElementById('rpName').value;
-                const category = document.getElementById('rpCategory').value;
-                const content = document.getElementById('rpPunishmentContent').value;
+                if (categorySelect.value === 'new') {
+                    alert('请先创建新分类或选择现有分类');
+                    return;
+                }
+                
+                const name = document.getElementById('punishmentName').value;
+                const category = document.getElementById('punishmentCategory').value;
+                const content = document.getElementById('punishmentContent').value;
                 
                 // 生成新ID
                 const newId = punishmentsData.length > 0 
@@ -2421,10 +2663,10 @@
                 punishmentsData.push(newPunishment);
                 saveData();
                 renderPunishments();
-                closeModal('rpModal');
+                closeModal('punishmentModal');
             };
             
-            openModal('rpModal');
+            openModal('punishmentModal');
         }
 
         // 显示积分历史记录
@@ -2809,6 +3051,188 @@
             openModal('categoryModal');
         }
 
+        // 显示惩罚分类管理
+        function showPunishmentCategoriesManagement() {
+            renderPunishmentCategoriesList();
+            openModal('punishmentCategoriesModal');
+        }
+
+        // 渲染惩罚分类列表
+        function renderPunishmentCategoriesList() {
+            const container = document.getElementById('punishmentCategoriesList');
+            container.innerHTML = '';
+            
+            // 统计每个分类下的惩罚项数量
+            const categoryCounts = {};
+            punishmentsData.forEach(punishment => {
+                if (!categoryCounts[punishment.category]) {
+                    categoryCounts[punishment.category] = 0;
+                }
+                categoryCounts[punishment.category]++;
+            });
+            
+            // 渲染惩罚分类列表
+            punishmentCategories.forEach(category => {
+                const count = categoryCounts[category] || 0;
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'punishment-category-item';
+                categoryDiv.dataset.category = category;
+                
+                categoryDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem; color: #e74c3c;"></i>
+                        <div>
+                            <div class="punishment-category-name">${category}</div>
+                            <div class="category-count">${count} 个惩罚项</div>
+                        </div>
+                    </div>
+                    <div class="punishment-category-actions">
+                        <button class="edit-rp-btn" data-action="edit-punishment-category" title="编辑分类">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-rp-btn" ${count > 0 ? 'disabled' : ''} data-action="delete-punishment-category" title="${count > 0 ? '分类中有惩罚项，无法删除' : '删除分类'}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+            
+            if (punishmentCategories.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-section">
+                        <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>暂无惩罚分类，请添加新分类</p>
+                    </div>
+                `;
+            }
+            
+            // 添加事件监听器
+            attachPunishmentCategoriesEventListeners();
+        }
+
+        // 为惩罚分类管理添加事件监听器
+        function attachPunishmentCategoriesEventListeners() {
+            // 编辑分类按钮
+            document.querySelectorAll('.edit-rp-btn[data-action="edit-punishment-category"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const categoryItem = this.closest('.punishment-category-item');
+                    const categoryName = categoryItem.dataset.category;
+                    editPunishmentCategory(categoryName);
+                });
+            });
+            
+            // 删除分类按钮
+            document.querySelectorAll('.delete-rp-btn[data-action="delete-punishment-category"]').forEach(btn => {
+                if (btn.disabled) return;
+                
+                btn.addEventListener('click', function() {
+                    const categoryItem = this.closest('.punishment-category-item');
+                    const categoryName = categoryItem.dataset.category;
+                    
+                    if (confirm(`确定要删除惩罚分类【${categoryName}】吗？`)) {
+                        deletePunishmentCategory(categoryName);
+                    }
+                });
+            });
+        }
+
+        // 编辑惩罚分类
+        function editPunishmentCategory(categoryName) {
+            document.getElementById('punishmentCategoryModalTitle').textContent = '编辑惩罚分类';
+            document.getElementById('punishmentCategoryName').value = categoryName;
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('punishmentCategoryForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const newName = document.getElementById('punishmentCategoryName').value;
+                
+                // 检查分类名是否已存在（除了当前分类）
+                if (newName !== categoryName && punishmentCategories.includes(newName)) {
+                    alert('该分类名称已存在！');
+                    return;
+                }
+                
+                // 如果分类名已更改，需要更新所有惩罚项的分类
+                if (newName !== categoryName) {
+                    punishmentsData.forEach(punishment => {
+                        if (punishment.category === categoryName) {
+                            punishment.category = newName;
+                        }
+                    });
+                    
+                    // 更新惩罚分类数组
+                    const index = punishmentCategories.indexOf(categoryName);
+                    if (index !== -1) {
+                        punishmentCategories[index] = newName;
+                    }
+                }
+                
+                saveData();
+                renderPunishmentCategoriesList();
+                renderPunishments();
+                closeModal('punishmentCategoryModal');
+            };
+            
+            openModal('punishmentCategoryModal');
+        }
+
+        // 删除惩罚分类
+        function deletePunishmentCategory(categoryName) {
+            // 从惩罚分类数组中删除
+            const index = punishmentCategories.indexOf(categoryName);
+            if (index !== -1) {
+                punishmentCategories.splice(index, 1);
+            }
+            
+            saveData();
+            renderPunishmentCategoriesList();
+            renderPunishments();
+        }
+
+        // 添加新惩罚分类
+        function addNewPunishmentCategory() {
+            document.getElementById('punishmentCategoryModalTitle').textContent = '添加惩罚分类';
+            document.getElementById('punishmentCategoryForm').reset();
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('punishmentCategoryForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('punishmentCategoryName').value;
+                
+                // 检查分类是否已存在
+                if (punishmentCategories.includes(name)) {
+                    alert('该分类已存在！');
+                    return;
+                }
+                
+                // 添加新分类
+                punishmentCategories.push(name);
+                
+                saveData();
+                renderPunishmentCategoriesList();
+                renderPunishments();
+                closeModal('punishmentCategoryModal');
+                
+                // 检查是否有待处理的惩罚表单数据
+                const pendingPunishmentData = sessionStorage.getItem('pendingPunishmentData');
+                if (pendingPunishmentData) {
+                    const data = JSON.parse(pendingPunishmentData);
+                    setTimeout(() => {
+                        addNewPunishmentWithData(data, name);
+                    }, 300);
+                    sessionStorage.removeItem('pendingPunishmentData');
+                }
+            };
+            
+            openModal('punishmentCategoryModal');
+        }
+
         // 使用数据添加新项目
         function addNewItemWithData(data, category) {
             document.getElementById('modalTitle').textContent = '添加新项目';
@@ -2865,6 +3289,56 @@
             openModal('itemModal');
         }
 
+        // 使用数据添加新惩罚项
+        function addNewPunishmentWithData(data, category) {
+            document.getElementById('punishmentModalTitle').textContent = '添加惩罚项';
+            document.getElementById('punishmentForm').reset();
+            
+            document.getElementById('punishmentName').value = data.name;
+            document.getElementById('punishmentContent').value = data.content;
+            
+            // 设置分类选项
+            const categorySelect = document.getElementById('punishmentCategory');
+            categorySelect.innerHTML = '';
+            punishmentCategories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                if (cat === category) {
+                    option.selected = true;
+                }
+                categorySelect.appendChild(option);
+            });
+            
+            const form = document.getElementById('punishmentForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('punishmentName').value;
+                const category = document.getElementById('punishmentCategory').value;
+                const content = document.getElementById('punishmentContent').value;
+                
+                // 生成新ID
+                const newId = punishmentsData.length > 0 
+                    ? Math.max(...punishmentsData.map(p => p.id)) + 1 
+                    : 1;
+                
+                const newPunishment = {
+                    id: newId,
+                    name: name,
+                    category: category,
+                    content: content
+                };
+                
+                punishmentsData.push(newPunishment);
+                saveData();
+                renderPunishments();
+                closeModal('punishmentModal');
+            };
+            
+            openModal('punishmentModal');
+        }
+
         // 打开模态框
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
@@ -2875,10 +3349,14 @@
             document.getElementById(modalId).style.display = 'none';
             if (modalId === 'itemModal') {
                 document.getElementById('itemForm').reset();
-            } else if (modalId === 'rpModal') {
-                document.getElementById('rpForm').reset();
+            } else if (modalId === 'rewardModal') {
+                document.getElementById('rewardForm').reset();
+            } else if (modalId === 'punishmentModal') {
+                document.getElementById('punishmentForm').reset();
             } else if (modalId === 'categoryModal') {
                 document.getElementById('categoryForm').reset();
+            } else if (modalId === 'punishmentCategoryModal') {
+                document.getElementById('punishmentCategoryForm').reset();
             }
         }
 
@@ -2998,9 +3476,13 @@
                 }
             });
             
-            // 如果是兑换页面，重新渲染奖励和惩罚项
-            if (pageId === 'exchange') {
+            // 如果是奖励页面，重新渲染奖励项
+            if (pageId === 'rewards') {
                 renderRewards();
+            }
+            
+            // 如果是惩罚页面，重新渲染惩罚项
+            if (pageId === 'punishments') {
                 renderPunishments();
             }
         }
@@ -3042,9 +3524,9 @@
             // 添加新惩罚按钮
             document.getElementById('addPunishmentBtn').addEventListener('click', addNewPunishment);
             
-            // 前往兑换页面按钮
-            document.getElementById('goToExchangeBtn').addEventListener('click', function() {
-                switchPage('exchange');
+            // 前往奖励页面按钮
+            document.getElementById('goToRewardsBtn').addEventListener('click', function() {
+                switchPage('rewards');
             });
             
             // 查看历史记录按钮
@@ -3058,6 +3540,12 @@
             
             // 添加新分类按钮
             document.getElementById('addCategoryBtn').addEventListener('click', addNewCategory);
+            
+            // 管理惩罚分类按钮
+            document.getElementById('managePunishmentCategoriesBtn').addEventListener('click', showPunishmentCategoriesManagement);
+            
+            // 添加新惩罚分类按钮
+            document.getElementById('addPunishmentCategoryBtn').addEventListener('click', addNewPunishmentCategory);
             
             // 导航栏链接事件
             document.querySelectorAll('.nav-link').forEach(link => {
@@ -3076,11 +3564,18 @@
                 closeModal('itemModal');
             });
             
-            document.getElementById('closeRpModalBtn').addEventListener('click', function() {
-                closeModal('rpModal');
+            document.getElementById('closeRewardModalBtn').addEventListener('click', function() {
+                closeModal('rewardModal');
             });
-            document.getElementById('cancelRpBtn').addEventListener('click', function() {
-                closeModal('rpModal');
+            document.getElementById('cancelRewardBtn').addEventListener('click', function() {
+                closeModal('rewardModal');
+            });
+            
+            document.getElementById('closePunishmentModalBtn').addEventListener('click', function() {
+                closeModal('punishmentModal');
+            });
+            document.getElementById('cancelPunishmentBtn').addEventListener('click', function() {
+                closeModal('punishmentModal');
             });
             
             document.getElementById('closeHistoryModalBtn').addEventListener('click', function() {
@@ -3104,6 +3599,20 @@
                 closeModal('categoryModal');
             });
             
+            document.getElementById('closePunishmentCategoriesModalBtn').addEventListener('click', function() {
+                closeModal('punishmentCategoriesModal');
+            });
+            document.getElementById('cancelPunishmentCategoriesBtn').addEventListener('click', function() {
+                closeModal('punishmentCategoriesModal');
+            });
+            
+            document.getElementById('closePunishmentCategoryModalBtn').addEventListener('click', function() {
+                closeModal('punishmentCategoryModal');
+            });
+            document.getElementById('cancelPunishmentCategoryBtn').addEventListener('click', function() {
+                closeModal('punishmentCategoryModal');
+            });
+            
             // 点击模态框外部关闭
             document.getElementById('itemModal').addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -3111,9 +3620,15 @@
                 }
             });
             
-            document.getElementById('rpModal').addEventListener('click', function(e) {
+            document.getElementById('rewardModal').addEventListener('click', function(e) {
                 if (e.target === this) {
-                    closeModal('rpModal');
+                    closeModal('rewardModal');
+                }
+            });
+            
+            document.getElementById('punishmentModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('punishmentModal');
                 }
             });
             
@@ -3132,6 +3647,18 @@
             document.getElementById('categoryModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeModal('categoryModal');
+                }
+            });
+            
+            document.getElementById('punishmentCategoriesModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('punishmentCategoriesModal');
+                }
+            });
+            
+            document.getElementById('punishmentCategoryModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('punishmentCategoryModal');
                 }
             });
             
