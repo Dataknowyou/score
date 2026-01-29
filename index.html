@@ -1,0 +1,2974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭积分与兑换系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* 导航栏样式 */
+        .navbar {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+        
+        /* 主内容区样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 累计积分显示 */
+        .total-points-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .total-points-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .total-points-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .total-points-label {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+        
+        .exchange-btn {
+            padding: 12px 25px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .exchange-btn:hover {
+            background-color: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .points-history-btn {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .points-history-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .export-btn {
+            padding: 10px 15px;
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .export-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        /* 页面内容区 */
+        .page-content {
+            display: none;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        /* 积分明细页面样式 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .week-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .week-btn {
+            padding: 10px 20px;
+            background-color: #4a6ee0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .week-btn.active {
+            background-color: #ff6b6b;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .week-btn:hover:not(.active) {
+            background-color: #3a5ed0;
+        }
+        
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .categories-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .category {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .category:hover {
+            transform: translateY(-5px);
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .category-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        
+        .category-icon {
+            font-size: 1.5rem;
+            color: #4a6ee0;
+        }
+        
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-name {
+            flex: 1;
+            font-size: 1rem;
+        }
+        
+        .item-points {
+            font-weight: 700;
+            color: #27ae60;
+            margin-right: 15px;
+            min-width: 40px;
+            text-align: right;
+        }
+        
+        .item-points.negative {
+            color: #e74c3c;
+        }
+        
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .score-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background-color: #4a6ee0;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .score-btn:hover {
+            background-color: #3a5ed0;
+            transform: scale(1.1);
+        }
+        
+        .score-btn.negative {
+            background-color: #e74c3c;
+        }
+        
+        .score-btn.negative:hover {
+            background-color: #c0392b;
+        }
+        
+        .item-count {
+            font-weight: 700;
+            min-width: 25px;
+            text-align: center;
+        }
+        
+        .edit-btn {
+            background-color: transparent;
+            border: none;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .edit-btn:hover {
+            background-color: #f0f0f0;
+            color: #3498db;
+        }
+        
+        .summary-panel {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 20px;
+        }
+        
+        .summary-title {
+            font-size: 1.6rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .today-score, .week-score {
+            text-align: center;
+        }
+        
+        .score-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-top: 5px;
+        }
+        
+        .today-score .score-value {
+            color: #3498db;
+        }
+        
+        .week-score .score-value {
+            color: #9b59b6;
+        }
+        
+        .score-label {
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+        
+        .day-scores {
+            margin-top: 25px;
+        }
+        
+        .day-scores h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .days-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        
+        .day-score {
+            background-color: #f8f9fa;
+            padding: 10px 5px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .day-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .day-points {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .reset-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .reset-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .add-item-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .add-item-btn:hover {
+            background-color: #219653;
+        }
+        
+        .manage-categories-btn {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .manage-categories-btn:hover {
+            background-color: #e67e22;
+        }
+        
+        /* 兑换页面样式 */
+        .rewards-punishments-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 900px) {
+            .rewards-punishments-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .rewards-section, .punishments-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title i {
+            color: #4a6ee0;
+        }
+        
+        .reward-category, .punishment-category {
+            margin-bottom: 25px;
+        }
+        
+        .category-subtitle {
+            font-size: 1.3rem;
+            color: #3498db;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .punishment-category .category-subtitle {
+            color: #e74c3c;
+            border-left-color: #e74c3c;
+        }
+        
+        .reward-item, .punishment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .punishment-item {
+            border-left-color: #e74c3c;
+        }
+        
+        .reward-info, .punishment-info {
+            flex: 1;
+        }
+        
+        .reward-name, .punishment-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .reward-points {
+            font-weight: 700;
+            color: #27ae60;
+            font-size: 1.2rem;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .punishment-type {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .reward-actions, .punishment-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: 15px;
+        }
+        
+        .exchange-reward-btn {
+            padding: 8px 15px;
+            background-color: #4a6ee0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .exchange-reward-btn:hover {
+            background-color: #3a5ed0;
+        }
+        
+        .exchange-reward-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .edit-rp-btn, .delete-rp-btn {
+            background-color: transparent;
+            border: none;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .edit-rp-btn:hover {
+            background-color: #e8f4fc;
+            color: #3498db;
+        }
+        
+        .delete-rp-btn:hover {
+            background-color: #ffeaea;
+            color: #e74c3c;
+        }
+        
+        .empty-section {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 30px 0;
+            font-style: italic;
+        }
+        
+        /* 积分历史记录页面 */
+        .history-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .history-table th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .history-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .positive-point {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .negative-point {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .save-btn, .cancel-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .save-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .save-btn:hover {
+            background-color: #219653;
+        }
+        
+        .cancel-btn {
+            background-color: #ecf0f1;
+            color: #333;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .motivation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e8f4fc;
+            border-radius: 10px;
+            text-align: center;
+            font-style: italic;
+            color: #2c3e50;
+        }
+        
+        .empty-category {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 20px 0;
+            font-style: italic;
+        }
+        
+        .category-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .remove-item-btn {
+            background-color: transparent;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 1.1rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .remove-item-btn:hover {
+            background-color: #ffeaea;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 积分历史记录模态框 */
+        .history-modal .modal-content {
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .history-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-stat {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .history-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+        
+        .history-stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .history-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 分类管理样式 */
+        .categories-management-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 20px;
+        }
+        
+        .categories-list {
+            margin-top: 20px;
+        }
+        
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4a6ee0;
+            cursor: move;
+            user-select: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .category-item.dragging {
+            opacity: 0.5;
+            background-color: #e8f4fc;
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .category-item.drag-over {
+            border-top: 2px solid #3498db;
+            margin-top: 2px;
+            margin-bottom: 12px;
+        }
+        
+        .category-item:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .category-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .category-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .category-count {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .drag-handle {
+            color: #bdc3c7;
+            margin-right: 10px;
+            cursor: move;
+            display: flex;
+            align-items: center;
+        }
+        
+        .drag-handle:hover {
+            color: #7f8c8d;
+        }
+        
+        /* 重置按钮组样式 */
+        .reset-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .reset-week-btn {
+            background-color: #e67e22;
+            color: white;
+        }
+        
+        .reset-week-btn:hover {
+            background-color: #d35400;
+        }
+        
+        .reset-all-btn {
+            background-color: #c0392b;
+            color: white;
+        }
+        
+        .reset-all-btn:hover {
+            background-color: #a93226;
+        }
+        
+        /* 排序提示信息 */
+        .sort-hint {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        
+        .sort-hint i {
+            color: #3498db;
+            margin-right: 8px;
+        }
+        
+        /* 保存排序按钮 */
+        .save-sort-btn {
+            background-color: #3498db;
+            color: white;
+            margin-top: 15px;
+        }
+        
+        .save-sort-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .save-sort-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-title">
+            <i class="fas fa-star"></i> 家庭积分系统
+        </div>
+        <div class="nav-links">
+            <a href="#" class="nav-link active" data-page="points">积分明细</a>
+            <a href="#" class="nav-link" data-page="exchange">奖励兑换</a>
+        </div>
+    </nav>
+    
+    <!-- 累计积分显示 -->
+    <div class="container">
+        <div class="total-points-container">
+            <div class="total-points-display">
+                <div class="total-points-value" id="totalPointsValue">0</div>
+                <div class="total-points-label">
+                    <div>累计积分</div>
+                    <small>实时统计所有历史得分</small>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="points-history-btn" id="showHistoryBtn">
+                    <i class="fas fa-history"></i> 查看积分历史
+                </button>
+                <button class="exchange-btn" id="goToExchangeBtn">
+                    <i class="fas fa-gift"></i> 前往兑换奖励
+                </button>
+            </div>
+        </div>
+        
+        <!-- 积分明细页面 -->
+        <div class="page-content active" id="points-page">
+            <div class="header">
+                <h1><i class="fas fa-star"></i> 家庭积分明细表</h1>
+                <p class="subtitle">我说到，我做到！礼物很美，努力的你更酷！</p>
+                <p class="subtitle">学习是你自己的事，你必须为你自己负责！</p>
+            </div>
+            
+            <div class="week-selector">
+                <button class="week-btn active" data-week="current">本周</button>
+                <button class="week-btn" data-week="last">上周</button>
+                <button class="week-btn" data-week="next">下周</button>
+            </div>
+            
+            <div class="content-wrapper">
+                <div class="categories-container" id="categoriesContainer">
+                    <!-- 分类将通过JavaScript动态生成 -->
+                </div>
+                
+                <div class="summary-panel">
+                    <h2 class="summary-title">积分统计</h2>
+                    
+                    <div class="score-display">
+                        <div class="today-score">
+                            <div class="score-label">今日得分</div>
+                            <div class="score-value" id="todayScore">0</div>
+                        </div>
+                        <div class="week-score">
+                            <div class="score-label">本周总分</div>
+                            <div class="score-value" id="weekScore">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-scores">
+                        <h3>每日得分</h3>
+                        <div class="days-container" id="daysContainer">
+                            <!-- 每日得分将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="reset-buttons">
+                            <button class="action-btn reset-btn" id="resetTodayBtn">
+                                <i class="fas fa-redo"></i> 重置今日
+                            </button>
+                            <button class="action-btn reset-week-btn" id="resetWeekBtn">
+                                <i class="fas fa-sync"></i> 重置本周
+                            </button>
+                            <button class="action-btn reset-all-btn" id="resetAllBtn">
+                                <i class="fas fa-trash-alt"></i> 重置累计
+                            </button>
+                        </div>
+                        <button class="action-btn add-item-btn" id="addItemBtn">
+                            <i class="fas fa-plus"></i> 添加新项目
+                        </button>
+                        <button class="action-btn manage-categories-btn" id="manageCategoriesBtn">
+                            <i class="fas fa-list"></i> 管理分类
+                        </button>
+                    </div>
+                    
+                    <div class="motivation">
+                        <p>你的努力不是为了做给谁看，也不是为了得积分</p>
+                        <p>而是为了做一个连自己都羡慕的人！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 兑换页面 -->
+        <div class="page-content" id="exchange-page">
+            <div class="header">
+                <h1><i class="fas fa-gift"></i> 家庭奖励和惩罚清单</h1>
+                <p class="subtitle">奖励是一种激励，惩罚并不是没有爱。</p>
+            </div>
+            
+            <div class="rewards-punishments-container">
+                <!-- 奖励项 -->
+                <div class="rewards-section">
+                    <div class="section-title">
+                        <span><i class="fas fa-gift"></i> 奖励项</span>
+                        <button class="add-item-btn" id="addRewardBtn">
+                            <i class="fas fa-plus"></i> 添加奖励
+                        </button>
+                    </div>
+                    
+                    <div id="rewardsContainer">
+                        <!-- 奖励项将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 惩罚项 -->
+                <div class="punishments-section">
+                    <div class="section-title">
+                        <span><i class="fas fa-exclamation-triangle"></i> 惩罚项</span>
+                        <button class="add-item-btn" id="addPunishmentBtn">
+                            <i class="fas fa-plus"></i> 添加惩罚
+                        </button>
+                    </div>
+                    
+                    <div id="punishmentsContainer">
+                        <!-- 惩罚项将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="motivation">
+                <p>你的努力不是为了做给谁看，也不是为了得积分</p>
+                <p>而是为了做一个连自己都羡慕的人！</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>家庭积分系统 &copy; 2023 | 每日进步一点点，成就更好的自己！</p>
+        </footer>
+    </div>
+    
+    <!-- 添加/编辑积分项目模态框 -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">添加新项目</h3>
+                <button class="close-btn" id="closeItemModalBtn">&times;</button>
+            </div>
+            
+            <form id="itemForm">
+                <div class="form-group">
+                    <label for="itemName">项目名称</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemCategory">项目分类</label>
+                    <select id="itemCategory" required>
+                        <!-- 分类选项会动态生成 -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemPoints">积分分值</label>
+                    <input type="number" id="itemPoints" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemType">积分类型</label>
+                    <select id="itemType" required>
+                        <option value="positive">加分项</option>
+                        <option value="negative">扣分项</option>
+                    </select>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelItemBtn">取消</button>
+                    <button type="submit" class="save-btn">保存项目</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑奖励/惩罚项目模态框 -->
+    <div class="modal" id="rpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="rpModalTitle">添加奖励项</h3>
+                <button class="close-btn" id="closeRpModalBtn">&times;</button>
+            </div>
+            
+            <form id="rpForm">
+                <div class="form-group">
+                    <label for="rpName">项目名称</label>
+                    <input type="text" id="rpName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rpCategory">分类</label>
+                    <select id="rpCategory" required>
+                        <!-- 奖励和惩罚的分类选项会动态生成 -->
+                    </select>
+                </div>
+                
+                <div class="form-group" id="rpPointsGroup">
+                    <label for="rpPoints">所需积分</label>
+                    <input type="number" id="rpPoints" required>
+                </div>
+                
+                <div class="form-group" id="rpPunishmentGroup" style="display: none;">
+                    <label for="rpPunishmentContent">惩罚内容</label>
+                    <textarea id="rpPunishmentContent" rows="3"></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelRpBtn">取消</button>
+                    <button type="submit" class="save-btn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 积分历史记录模态框 -->
+    <div class="modal history-modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">积分历史记录</h3>
+                <button class="close-btn" id="closeHistoryModalBtn">&times;</button>
+            </div>
+            
+            <div class="history-summary">
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyTotalPoints">0</div>
+                    <div class="history-stat-label">累计总积分</div>
+                </div>
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyEarnedPoints">0</div>
+                    <div class="history-stat-label">获得积分</div>
+                </div>
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyDeductedPoints">0</div>
+                    <div class="history-stat-label">扣除积分</div>
+                </div>
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyExchangedPoints">0</div>
+                    <div class="history-stat-label">兑换消耗</div>
+                </div>
+            </div>
+            
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>时间</th>
+                            <th>项目</th>
+                            <th>类型</th>
+                            <th>积分变化</th>
+                            <th>累计积分</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- 历史记录将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="history-actions">
+                <button class="export-btn" id="exportHistoryBtn">
+                    <i class="fas fa-file-excel"></i> 导出为Excel
+                </button>
+                <div>
+                    <button type="button" class="cancel-btn" id="cancelHistoryBtn">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 分类管理模态框 -->
+    <div class="modal" id="categoriesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">管理分类</h3>
+                <button class="close-btn" id="closeCategoriesModalBtn">&times;</button>
+            </div>
+            
+            <div class="categories-management-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4>当前分类列表</h4>
+                    <button class="add-item-btn" id="addCategoryBtn">
+                        <i class="fas fa-plus"></i> 添加新分类
+                    </button>
+                </div>
+                
+                <div class="sort-hint">
+                    <i class="fas fa-info-circle"></i>
+                    提示：拖拽分类项可以调整显示顺序，调整后记得点击"保存排序"按钮
+                </div>
+                
+                <div class="categories-list" id="categoriesList">
+                    <!-- 分类列表将通过JavaScript动态生成 -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="action-btn save-sort-btn" id="saveSortBtn">
+                        <i class="fas fa-save"></i> 保存排序
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn" id="cancelCategoriesBtn">完成</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑分类模态框 -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="categoryModalTitle">添加新分类</h3>
+                <button class="close-btn" id="closeCategoryModalBtn">&times;</button>
+            </div>
+            
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label for="categoryName">分类名称</label>
+                    <input type="text" id="categoryName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categoryIcon">分类图标</label>
+                    <select id="categoryIcon" required>
+                        <option value="fas fa-book-open">书籍</option>
+                        <option value="fas fa-graduation-cap">学习</option>
+                        <option value="fas fa-star">星星</option>
+                        <option value="fas fa-home">家庭</option>
+                        <option value="fas fa-chart-line">图表</option>
+                        <option value="fas fa-trophy">奖杯</option>
+                        <option value="fas fa-heart">爱心</option>
+                        <option value="fas fa-users">人群</option>
+                        <option value="fas fa-spa">心灵</option>
+                        <option value="fas fa-pencil-alt">铅笔</option>
+                        <option value="fas fa-book">书本</option>
+                        <option value="fas fa-clock">时钟</option>
+                        <option value="fas fa-check-circle">完成</option>
+                        <option value="fas fa-running">运动</option>
+                        <option value="fas fa-utensils">餐具</option>
+                    </select>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelCategoryBtn">取消</button>
+                    <button type="submit" class="save-btn">保存分类</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 初始化积分数据
+        const initialData = {
+            "阅读": [
+                { id: 1, name: "大声晨读15分钟", points: 2, type: "positive" },
+                { id: 2, name: "大声晚读30分钟", points: 2, type: "positive" },
+                { id: 3, name: "未认真完成晨读", points: -3, type: "negative" },
+                { id: 4, name: "未认真完成晚读", points: -3, type: "negative" }
+            ],
+            "学习习惯": [
+                { id: 5, name: "认真完成语文作业+复习", points: 2, type: "positive" },
+                { id: 6, name: "认真完成英语作业+默单词背课", points: 2, type: "positive" },
+                { id: 7, name: "认真完成数学作业+复习", points: 2, type: "positive" },
+                { id: 8, name: "规定时间内未完成作业", points: -10, type: "negative" },
+                { id: 9, name: "写作业姿不标准", points: -3, type: "negative" }
+            ],
+            "学习加分": [
+                { id: 10, name: "口算题一页", points: 2, type: "positive" },
+                { id: 11, name: "每日练字15分钟", points: 1, type: "positive" },
+                { id: 12, name: "英语打卡", points: 2, type: "positive" },
+                { id: 13, name: "牛津树绘本学习", points: 2, type: "positive" },
+                { id: 14, name: "坐姿标准", points: 2, type: "positive" },
+                { id: 15, name: "规定时间内完成作业", points: 2, type: "positive" }
+            ],
+            "生活习惯": [
+                { id: 16, name: "6:30准时起床", points: 2, type: "positive" },
+                { id: 17, name: "好好吃饭不挑食，20分钟内完成", points: 2, type: "positive" },
+                { id: 18, name: "9点上床（睡前悄悄话+听睡前故事）", points: 2, type: "positive" },
+                { id: 19, name: "保持书桌整洁", points: 2, type: "positive" },
+                { id: 20, name: "保持房间整洁", points: 2, type: "positive" },
+                { id: 21, name: "起床/睡觉：拖拉磨蹭", points: -5, type: "negative" },
+                { id: 22, name: "吃饭挑食，磨蹭", points: -5, type: "negative" },
+                { id: 23, name: "房间凌乱", points: -3, type: "negative" },
+                { id: 24, name: "书桌凌乱", points: -3, type: "negative" }
+            ],
+            "学习成果": [
+                { id: 25, name: "语文测试低于90分", points: -20, type: "negative" },
+                { id: 26, name: "英语测试低于90分", points: -20, type: "negative" },
+                { id: 27, name: "英语测试95分以上", points: 30, type: "positive" },
+                { id: 28, name: "数学测试95分以上", points: 30, type: "positive" }
+            ],
+            "小成就": [
+                { id: 29, name: "小作文一篇", points: 4, type: "positive" },
+                { id: 30, name: "日记一则", points: 8, type: "positive" },
+                { id: 31, name: "摘抄：字词句/成语", points: 6, type: "positive" },
+                { id: 32, name: "古诗词朗诵一首", points: 2, type: "positive" },
+                { id: 33, name: "参加校内活动", points: 30, type: "positive" },
+                { id: 34, name: "古诗词背诵一首", points: 30, type: "positive" }
+            ],
+            "品行": [
+                { id: 35, name: "被老师点名批评", points: -15, type: "negative" },
+                { id: 36, name: "说脏话", points: -50, type: "negative" },
+                { id: 37, name: "撒谎：清空本周已得所有积分", points: -999, type: "negative" }
+            ],
+            "家庭表现": [
+                { id: 38, name: "获得表扬（有依据）", points: 10, type: "positive" },
+                { id: 39, name: "得奖（根据得奖项+10-30分）", points: 20, type: "positive" },
+                { id: 40, name: "无理取闹闹情绪", points: -10, type: "negative" }
+            ],
+            "灵修生活": [
+                { id: 41, name: "每日朗读：英文", points: 2, type: "positive" },
+                { id: 42, name: "英语打卡错一个单词扣1", points: -1, type: "negative" }
+            ]
+        };
+
+        // 初始奖励和惩罚数据
+        const initialRewards = [
+            { id: 1, name: "周五晚上可以看记录片1h", points: 100, category: "100分" },
+            { id: 2, name: "自选文具一件（≤20元）", points: 100, category: "100分" },
+            { id: 3, name: "自选小蛋糕一个（≤50元）", points: 200, category: "200分" },
+            { id: 4, name: "自选课外书一本", points: 200, category: "200分" },
+            { id: 5, name: "自选文具一件（≤40元）", points: 250, category: "250分" },
+            { id: 6, name: "去同学家玩半天", points: 250, category: "250分" },
+            { id: 7, name: "邀请同学到家做客", points: 300, category: "300分" },
+            { id: 8, name: "肯德基券一张", points: 300, category: "300分" },
+            { id: 9, name: "自选小心愿一件（≤50元）", points: 400, category: "400分" },
+            { id: 10, name: "自选玩具一件（≤50元）", points: 400, category: "400分" },
+            { id: 11, name: "自选文具（≤60元）", points: 400, category: "400分" },
+            { id: 12, name: "自选电影票一张", points: 400, category: "400分" },
+            { id: 13, name: "自选游乐场门票一张", points: 500, category: "500分" },
+            { id: 14, name: "玩手机或电脑30分钟", points: 500, category: "500分" },
+            { id: 15, name: "自由支配：一天的时间", points: 500, category: "500分" },
+            { id: 16, name: "自选文具一件（≤100元）", points: 500, category: "500分" },
+            { id: 17, name: "满足一个心愿清单（≤200元）", points: 500, category: "500分" },
+            { id: 18, name: "任意一件事：拥有自主权（原则范围内）", points: 500, category: "500分" }
+        ];
+
+        const initialPunishments = [
+            { id: 1, name: "每日积分低于10分", content: "罚读成语故事一个", category: "学习方面" },
+            { id: 2, name: "语文测试低于95分", content: "罚抄写生字10个+组词", category: "学习方面" },
+            { id: 3, name: "数学测试低于95分", content: "罚做练习卷一份+口算题2页（一页100题）", category: "学习方面" },
+            { id: 4, name: "英语测试低于95分", content: "罚默写课文+单词", category: "学习方面" },
+            { id: 5, name: "未认真完成晨读", content: "背诵课文一单元", category: "学习方面" },
+            { id: 6, name: "未认真完成晚读", content: "背诵课文一单元", category: "学习方面" },
+            { id: 7, name: "未在规定时间完成作业", content: "抄写古诗3首", category: "学习方面" },
+            { id: 8, name: "写作业坐姿不标准", content: "完成小练字一张", category: "学习方面" },
+            { id: 9, name: "被老师点名批评", content: "看图写话3篇", category: "学习方面" },
+            { id: 10, name: "撒谎", content: "罚写作文一篇", category: "学习方面" },
+            { id: 11, name: "说脏话", content: "罚抄文明用语10个词", category: "学习方面" },
+            { id: 12, name: "无理取闹闹情绪", content: "罚做家务一次", category: "生活习惯" },
+            { id: 13, name: "书桌/房间凌乱", content: "罚叠全家人的衣服一次", category: "生活习惯" },
+            { id: 14, name: "吃饭拖拉/挑食", content: "罚洗碗一次", category: "生活习惯" }
+        ];
+
+        // 默认分类图标映射
+        const defaultCategoryIcons = {
+            "阅读": "fas fa-book-open",
+            "学习习惯": "fas fa-graduation-cap",
+            "学习加分": "fas fa-star",
+            "生活习惯": "fas fa-home",
+            "学习成果": "fas fa-chart-line",
+            "小成就": "fas fa-trophy",
+            "品行": "fas fa-heart",
+            "家庭表现": "fas fa-users",
+            "灵修生活": "fas fa-spa",
+            "学习类": "fas fa-pencil-alt"
+        };
+
+        // 全局变量
+        let scoreData = JSON.parse(localStorage.getItem('familyScoreData')) || initializeScoreData();
+        let historyData = JSON.parse(localStorage.getItem('familyHistoryData')) || [];
+        let rewardsData = JSON.parse(localStorage.getItem('familyRewardsData')) || initialRewards;
+        let punishmentsData = JSON.parse(localStorage.getItem('familyPunishmentsData')) || initialPunishments;
+        let categoryIcons = JSON.parse(localStorage.getItem('familyCategoryIcons')) || defaultCategoryIcons;
+        let categoryOrder = JSON.parse(localStorage.getItem('familyCategoryOrder')) || Object.keys(categoryIcons);
+        let currentWeek = 'current';
+        let currentDay = new Date().getDay(); // 0=周日, 1=周一, ..., 6=周六
+        if (currentDay === 0) currentDay = 7; // 调整为7=周日
+        
+        // 拖拽相关变量
+        let draggedItem = null;
+        let isDragging = false;
+        let hasSortChanged = false;
+        
+        // 初始化积分数据
+        function initializeScoreData() {
+            const data = {};
+            const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            
+            // 初始化每个项目
+            const allItems = [];
+            Object.keys(initialData).forEach(category => {
+                initialData[category].forEach(item => {
+                    allItems.push({
+                        ...item,
+                        category: category,
+                        counts: { '周一': 0, '周二': 0, '周三': 0, '周四': 0, '周五': 0, '周六': 0, '周日': 0 }
+                    });
+                });
+            });
+            
+            // 初始化每日得分
+            const dayScores = {};
+            days.forEach(day => {
+                dayScores[day] = 0;
+            });
+            
+            data.items = allItems;
+            data.dayScores = dayScores;
+            data.lastUpdated = new Date().toISOString().split('T')[0];
+            
+            return data;
+        }
+
+        // 保存数据到本地存储
+        function saveData() {
+            localStorage.setItem('familyScoreData', JSON.stringify(scoreData));
+            localStorage.setItem('familyHistoryData', JSON.stringify(historyData));
+            localStorage.setItem('familyRewardsData', JSON.stringify(rewardsData));
+            localStorage.setItem('familyPunishmentsData', JSON.stringify(punishmentsData));
+            localStorage.setItem('familyCategoryIcons', JSON.stringify(categoryIcons));
+            localStorage.setItem('familyCategoryOrder', JSON.stringify(categoryOrder));
+        }
+
+        // 计算累计积分（实时统计所有历史得分）
+        function calculateTotalPoints() {
+            let total = 0;
+            
+            // 统计所有历史积分记录
+            historyData.forEach(record => {
+                total += record.points;
+            });
+            
+            // 确保累计积分不低于0
+            return Math.max(0, total);
+        }
+
+        // 计算今日得分
+        function calculateTodayScore() {
+            const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            const todayIndex = (currentDay === 7) ? 6 : currentDay - 1;
+            const today = days[todayIndex];
+            
+            let todayScore = 0;
+            scoreData.items.forEach(item => {
+                if (item.counts[today] > 0) {
+                    todayScore += item.counts[today] * item.points;
+                }
+            });
+            
+            // 确保今日得分不低于0
+            return Math.max(0, todayScore);
+        }
+
+        // 计算本周总分
+        function calculateWeekScore() {
+            let weekScore = 0;
+            const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            
+            days.forEach(day => {
+                let dayScore = 0;
+                scoreData.items.forEach(item => {
+                    if (item.counts[day] > 0) {
+                        dayScore += item.counts[day] * item.points;
+                    }
+                });
+                scoreData.dayScores[day] = Math.max(0, dayScore);
+                weekScore += scoreData.dayScores[day];
+            });
+            
+            // 确保本周总分不低于0
+            return Math.max(0, weekScore);
+        }
+
+        // 添加积分历史记录
+        function addHistoryRecord(item, countChange, day) {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+            
+            const record = {
+                id: historyData.length > 0 ? Math.max(...historyData.map(r => r.id)) + 1 : 1,
+                date: dateStr,
+                time: timeStr,
+                day: day,
+                itemName: item.name,
+                itemId: item.id,
+                points: item.points * countChange,
+                type: item.points > 0 ? '获得' : '扣除',
+                cumulativePoints: calculateTotalPoints() + (item.points * countChange)
+            };
+            
+            historyData.push(record);
+            saveData();
+        }
+
+        // 添加兑换历史记录
+        function addExchangeHistoryRecord(reward) {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+            
+            const record = {
+                id: historyData.length > 0 ? Math.max(...historyData.map(r => r.id)) + 1 : 1,
+                date: dateStr,
+                time: timeStr,
+                day: '兑换',
+                itemName: `兑换奖励：${reward.name}`,
+                itemId: reward.id,
+                points: -reward.points,
+                type: '兑换',
+                cumulativePoints: Math.max(0, calculateTotalPoints() - reward.points)
+            };
+            
+            historyData.push(record);
+            saveData();
+        }
+
+        // 兑换奖励
+        function exchangeReward(rewardId) {
+            const reward = rewardsData.find(r => r.id === rewardId);
+            const totalPoints = calculateTotalPoints();
+            
+            if (totalPoints >= reward.points) {
+                if (confirm(`确定要兑换【${reward.name}】吗？将扣除${reward.points}积分。`)) {
+                    // 添加兑换记录
+                    addExchangeHistoryRecord(reward);
+                    
+                    // 更新显示
+                    updateTotalPointsDisplay();
+                    
+                    alert(`兑换成功！已扣除${reward.points}积分，剩余${calculateTotalPoints()}积分。`);
+                    
+                    // 重新渲染奖励项，更新按钮状态
+                    renderRewards();
+                }
+            } else {
+                alert(`积分不足！兑换【${reward.name}】需要${reward.points}积分，你目前只有${totalPoints}积分。`);
+            }
+        }
+
+        // 渲染分类和项目
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+            
+            // 按分类分组项目
+            const categorizedItems = {};
+            scoreData.items.forEach(item => {
+                if (!categorizedItems[item.category]) {
+                    categorizedItems[item.category] = [];
+                }
+                categorizedItems[item.category].push(item);
+            });
+            
+            // 使用保存的分类顺序
+            const categories = categoryOrder.filter(category => categorizedItems[category]);
+            
+            // 渲染每个分类
+            categories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                
+                // 获取今天的日期
+                const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                const todayIndex = (currentDay === 7) ? 6 : currentDay - 1;
+                const today = days[todayIndex];
+                
+                const items = categorizedItems[category];
+                
+                categoryDiv.innerHTML = `
+                    <div class="category-header">
+                        <h3 class="category-title">${category}</h3>
+                        <i class="category-icon ${categoryIcons[category] || 'fas fa-list'}"></i>
+                    </div>
+                    ${items.length > 0 ? 
+                        items.map(item => {
+                            const count = item.counts[today] || 0;
+                            const isNegative = item.points < 0;
+                            return `
+                                <div class="item" data-id="${item.id}">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-points ${isNegative ? 'negative' : ''}">${isNegative ? item.points : '+' + item.points}</div>
+                                    <div class="item-controls">
+                                        <button class="score-btn ${isNegative ? 'negative' : ''}" data-action="decrease">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <div class="item-count">${count}</div>
+                                        <button class="score-btn ${isNegative ? 'negative' : ''}" data-action="increase">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                        <button class="edit-btn" data-action="edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="remove-item-btn" data-action="remove">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : 
+                        '<div class="empty-category">暂无项目，点击下方按钮添加</div>'
+                    }
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+            
+            // 添加事件监听器
+            attachItemEventListeners();
+        }
+
+        // 为项目添加事件监听器
+        function attachItemEventListeners() {
+            // 增加/减少计数按钮
+            document.querySelectorAll('.score-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const itemDiv = this.closest('.item');
+                    const itemId = parseInt(itemDiv.dataset.id);
+                    const action = this.dataset.action;
+                    
+                    updateItemCount(itemId, action);
+                });
+            });
+            
+            // 编辑按钮
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const itemDiv = this.closest('.item');
+                    const itemId = parseInt(itemDiv.dataset.id);
+                    
+                    editItem(itemId);
+                });
+            });
+            
+            // 删除按钮
+            document.querySelectorAll('.remove-item-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const itemDiv = this.closest('.item');
+                    const itemId = parseInt(itemDiv.dataset.id);
+                    
+                    if (confirm('确定要删除这个项目吗？')) {
+                        removeItem(itemId);
+                    }
+                });
+            });
+        }
+
+        // 更新项目计数
+        function updateItemCount(itemId, action) {
+            const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            const todayIndex = (currentDay === 7) ? 6 : currentDay - 1;
+            const today = days[todayIndex];
+            
+            const item = scoreData.items.find(item => item.id === itemId);
+            let countChange = 0;
+            
+            if (action === 'increase') {
+                item.counts[today]++;
+                countChange = 1;
+            } else if (action === 'decrease' && item.counts[today] > 0) {
+                item.counts[today]--;
+                countChange = -1;
+            }
+            
+            if (countChange !== 0) {
+                // 添加历史记录
+                addHistoryRecord(item, countChange, today);
+                
+                // 更新显示
+                saveData();
+                updateScores();
+                updateTotalPointsDisplay();
+                renderCategories();
+            }
+        }
+
+        // 编辑项目
+        function editItem(itemId) {
+            const item = scoreData.items.find(item => item.id === itemId);
+            
+            document.getElementById('modalTitle').textContent = '编辑项目';
+            document.getElementById('itemName').value = item.name;
+            
+            // 动态生成分类选项
+            const categorySelect = document.getElementById('itemCategory');
+            categorySelect.innerHTML = '';
+            categoryOrder.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                if (category === item.category) {
+                    option.selected = true;
+                }
+                categorySelect.appendChild(option);
+            });
+            
+            document.getElementById('itemPoints').value = Math.abs(item.points);
+            document.getElementById('itemType').value = item.points < 0 ? 'negative' : 'positive';
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('itemForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                item.name = document.getElementById('itemName').value;
+                item.category = document.getElementById('itemCategory').value;
+                item.points = document.getElementById('itemType').value === 'negative' 
+                    ? -Math.abs(parseInt(document.getElementById('itemPoints').value))
+                    : Math.abs(parseInt(document.getElementById('itemPoints').value));
+                
+                saveData();
+                renderCategories();
+                updateScores();
+                updateTotalPointsDisplay();
+                closeModal('itemModal');
+            };
+            
+            openModal('itemModal');
+        }
+
+        // 删除项目
+        function removeItem(itemId) {
+            const itemIndex = scoreData.items.findIndex(item => item.id === itemId);
+            if (itemIndex !== -1) {
+                scoreData.items.splice(itemIndex, 1);
+                saveData();
+                renderCategories();
+                updateScores();
+                updateTotalPointsDisplay();
+            }
+        }
+
+        // 更新分数显示
+        function updateScores() {
+            const todayScore = calculateTodayScore();
+            const weekScore = calculateWeekScore();
+            
+            document.getElementById('todayScore').textContent = todayScore;
+            document.getElementById('weekScore').textContent = weekScore;
+            
+            // 更新每日得分显示
+            const daysContainer = document.getElementById('daysContainer');
+            const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            
+            daysContainer.innerHTML = days.map(day => `
+                <div class="day-score">
+                    <div class="day-name">${day}</div>
+                    <div class="day-points">${scoreData.dayScores[day] || 0}</div>
+                </div>
+            `).join('');
+        }
+
+        // 更新累计积分显示
+        function updateTotalPointsDisplay() {
+            const totalPoints = calculateTotalPoints();
+            document.getElementById('totalPointsValue').textContent = totalPoints;
+        }
+
+        // 渲染奖励项
+        function renderRewards() {
+            const container = document.getElementById('rewardsContainer');
+            container.innerHTML = '';
+            
+            // 按积分分类分组奖励项
+            const rewardCategories = {};
+            rewardsData.forEach(reward => {
+                if (!rewardCategories[reward.category]) {
+                    rewardCategories[reward.category] = [];
+                }
+                rewardCategories[reward.category].push(reward);
+            });
+            
+            // 渲染每个积分分类
+            Object.keys(rewardCategories).sort().forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'reward-category';
+                
+                categoryDiv.innerHTML = `
+                    <h4 class="category-subtitle">${category}</h4>
+                    ${rewardCategories[category].map(reward => {
+                        const totalPoints = calculateTotalPoints();
+                        const canExchange = totalPoints >= reward.points;
+                        return `
+                            <div class="reward-item" data-id="${reward.id}">
+                                <div class="reward-info">
+                                    <div class="reward-name">${reward.name}</div>
+                                    <div class="reward-points">${reward.points}分</div>
+                                </div>
+                                <div class="reward-actions">
+                                    <button class="exchange-reward-btn" ${canExchange ? '' : 'disabled'}>
+                                        ${canExchange ? '兑换' : '积分不足'}
+                                    </button>
+                                    <button class="edit-rp-btn" data-type="reward">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-rp-btn" data-type="reward">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+            
+            if (rewardsData.length === 0) {
+                container.innerHTML = '<div class="empty-section">暂无奖励项，点击上方按钮添加</div>';
+            }
+            
+            // 添加事件监听器
+            attachRewardsEventListeners();
+        }
+
+        // 渲染惩罚项
+        function renderPunishments() {
+            const container = document.getElementById('punishmentsContainer');
+            container.innerHTML = '';
+            
+            // 按分类分组惩罚项
+            const punishmentCategories = {
+                "学习方面": [],
+                "生活习惯": [],
+                "属灵方面": []
+            };
+            
+            punishmentsData.forEach(punishment => {
+                if (punishmentCategories[punishment.category]) {
+                    punishmentCategories[punishment.category].push(punishment);
+                } else {
+                    punishmentCategories["学习方面"].push(punishment);
+                }
+            });
+            
+            // 渲染每个惩罚分类
+            Object.keys(punishmentCategories).forEach(category => {
+                const items = punishmentCategories[category];
+                if (items.length === 0) return;
+                
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'punishment-category';
+                
+                categoryDiv.innerHTML = `
+                    <h4 class="category-subtitle">${category}</h4>
+                    ${items.map(punishment => {
+                        return `
+                            <div class="punishment-item" data-id="${punishment.id}">
+                                <div class="punishment-info">
+                                    <div class="punishment-name">${punishment.name}</div>
+                                    <div class="punishment-type">${punishment.content}</div>
+                                </div>
+                                <div class="punishment-actions">
+                                    <button class="edit-rp-btn" data-type="punishment">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-rp-btn" data-type="punishment">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+            
+            if (punishmentsData.length === 0) {
+                container.innerHTML = '<div class="empty-section">暂无惩罚项，点击上方按钮添加</div>';
+            }
+            
+            // 添加事件监听器
+            attachPunishmentsEventListeners();
+        }
+
+        // 为奖励项添加事件监听器
+        function attachRewardsEventListeners() {
+            // 兑换按钮
+            document.querySelectorAll('.exchange-reward-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const rewardItem = this.closest('.reward-item');
+                    const rewardId = parseInt(rewardItem.dataset.id);
+                    exchangeReward(rewardId);
+                });
+            });
+            
+            // 编辑按钮
+            document.querySelectorAll('.edit-rp-btn[data-type="reward"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const rewardItem = this.closest('.reward-item');
+                    const rewardId = parseInt(rewardItem.dataset.id);
+                    editReward(rewardId);
+                });
+            });
+            
+            // 删除按钮
+            document.querySelectorAll('.delete-rp-btn[data-type="reward"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const rewardItem = this.closest('.reward-item');
+                    const rewardId = parseInt(rewardItem.dataset.id);
+                    
+                    if (confirm('确定要删除这个奖励项吗？')) {
+                        removeReward(rewardId);
+                    }
+                });
+            });
+        }
+
+        // 为惩罚项添加事件监听器
+        function attachPunishmentsEventListeners() {
+            // 编辑按钮
+            document.querySelectorAll('.edit-rp-btn[data-type="punishment"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const punishmentItem = this.closest('.punishment-item');
+                    const punishmentId = parseInt(punishmentItem.dataset.id);
+                    editPunishment(punishmentId);
+                });
+            });
+            
+            // 删除按钮
+            document.querySelectorAll('.delete-rp-btn[data-type="punishment"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const punishmentItem = this.closest('.punishment-item');
+                    const punishmentId = parseInt(punishmentItem.dataset.id);
+                    
+                    if (confirm('确定要删除这个惩罚项吗？')) {
+                        removePunishment(punishmentId);
+                    }
+                });
+            });
+        }
+
+        // 编辑奖励项
+        function editReward(rewardId) {
+            const reward = rewardsData.find(r => r.id === rewardId);
+            
+            document.getElementById('rpModalTitle').textContent = '编辑奖励项';
+            document.getElementById('rpName').value = reward.name;
+            
+            // 设置分类选项
+            const categorySelect = document.getElementById('rpCategory');
+            categorySelect.innerHTML = `
+                <option value="100分" ${reward.category === '100分' ? 'selected' : ''}>100分</option>
+                <option value="200分" ${reward.category === '200分' ? 'selected' : ''}>200分</option>
+                <option value="250分" ${reward.category === '250分' ? 'selected' : ''}>250分</option>
+                <option value="300分" ${reward.category === '300分' ? 'selected' : ''}>300分</option>
+                <option value="400分" ${reward.category === '400分' ? 'selected' : ''}>400分</option>
+                <option value="500分" ${reward.category === '500分' ? 'selected' : ''}>500分</option>
+            `;
+            
+            document.getElementById('rpPoints').value = reward.points;
+            
+            // 显示积分输入框，隐藏惩罚内容框
+            document.getElementById('rpPointsGroup').style.display = 'block';
+            document.getElementById('rpPunishmentGroup').style.display = 'none';
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('rpForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                reward.name = document.getElementById('rpName').value;
+                reward.category = document.getElementById('rpCategory').value;
+                reward.points = parseInt(document.getElementById('rpPoints').value);
+                
+                saveData();
+                renderRewards();
+                closeModal('rpModal');
+            };
+            
+            openModal('rpModal');
+        }
+
+        // 编辑惩罚项
+        function editPunishment(punishmentId) {
+            const punishment = punishmentsData.find(p => p.id === punishmentId);
+            
+            document.getElementById('rpModalTitle').textContent = '编辑惩罚项';
+            document.getElementById('rpName').value = punishment.name;
+            
+            // 设置分类选项
+            const categorySelect = document.getElementById('rpCategory');
+            categorySelect.innerHTML = `
+                <option value="学习方面" ${punishment.category === '学习方面' ? 'selected' : ''}>学习方面</option>
+                <option value="生活习惯" ${punishment.category === '生活习惯' ? 'selected' : ''}>生活习惯</option>
+                <option value="属灵方面" ${punishment.category === '属灵方面' ? 'selected' : ''}>属灵方面</option>
+            `;
+            
+            document.getElementById('rpPunishmentContent').value = punishment.content;
+            
+            // 显示惩罚内容框，隐藏积分输入框
+            document.getElementById('rpPointsGroup').style.display = 'none';
+            document.getElementById('rpPunishmentGroup').style.display = 'block';
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('rpForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                punishment.name = document.getElementById('rpName').value;
+                punishment.category = document.getElementById('rpCategory').value;
+                punishment.content = document.getElementById('rpPunishmentContent').value;
+                
+                saveData();
+                renderPunishments();
+                closeModal('rpModal');
+            };
+            
+            openModal('rpModal');
+        }
+
+        // 删除奖励项
+        function removeReward(rewardId) {
+            const rewardIndex = rewardsData.findIndex(r => r.id === rewardId);
+            if (rewardIndex !== -1) {
+                rewardsData.splice(rewardIndex, 1);
+                saveData();
+                renderRewards();
+            }
+        }
+
+        // 删除惩罚项
+        function removePunishment(punishmentId) {
+            const punishmentIndex = punishmentsData.findIndex(p => p.id === punishmentId);
+            if (punishmentIndex !== -1) {
+                punishmentsData.splice(punishmentIndex, 1);
+                saveData();
+                renderPunishments();
+            }
+        }
+
+        // 添加新奖励项
+        function addNewReward() {
+            document.getElementById('rpModalTitle').textContent = '添加奖励项';
+            document.getElementById('rpForm').reset();
+            
+            // 设置分类选项
+            const categorySelect = document.getElementById('rpCategory');
+            categorySelect.innerHTML = `
+                <option value="100分">100分</option>
+                <option value="200分">200分</option>
+                <option value="250分">250分</option>
+                <option value="300分">300分</option>
+                <option value="400分">400分</option>
+                <option value="500分">500分</option>
+            `;
+            
+            // 显示积分输入框，隐藏惩罚内容框
+            document.getElementById('rpPointsGroup').style.display = 'block';
+            document.getElementById('rpPunishmentGroup').style.display = 'none';
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('rpForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('rpName').value;
+                const category = document.getElementById('rpCategory').value;
+                const points = parseInt(document.getElementById('rpPoints').value);
+                
+                // 生成新ID
+                const newId = rewardsData.length > 0 
+                    ? Math.max(...rewardsData.map(r => r.id)) + 1 
+                    : 1;
+                
+                const newReward = {
+                    id: newId,
+                    name: name,
+                    category: category,
+                    points: points
+                };
+                
+                rewardsData.push(newReward);
+                saveData();
+                renderRewards();
+                closeModal('rpModal');
+            };
+            
+            openModal('rpModal');
+        }
+
+        // 添加新惩罚项
+        function addNewPunishment() {
+            document.getElementById('rpModalTitle').textContent = '添加惩罚项';
+            document.getElementById('rpForm').reset();
+            
+            // 设置分类选项
+            const categorySelect = document.getElementById('rpCategory');
+            categorySelect.innerHTML = `
+                <option value="学习方面">学习方面</option>
+                <option value="生活习惯">生活习惯</option>
+                <option value="属灵方面">属灵方面</option>
+            `;
+            
+            // 显示惩罚内容框，隐藏积分输入框
+            document.getElementById('rpPointsGroup').style.display = 'none';
+            document.getElementById('rpPunishmentGroup').style.display = 'block';
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('rpForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('rpName').value;
+                const category = document.getElementById('rpCategory').value;
+                const content = document.getElementById('rpPunishmentContent').value;
+                
+                // 生成新ID
+                const newId = punishmentsData.length > 0 
+                    ? Math.max(...punishmentsData.map(p => p.id)) + 1 
+                    : 1;
+                
+                const newPunishment = {
+                    id: newId,
+                    name: name,
+                    category: category,
+                    content: content
+                };
+                
+                punishmentsData.push(newPunishment);
+                saveData();
+                renderPunishments();
+                closeModal('rpModal');
+            };
+            
+            openModal('rpModal');
+        }
+
+        // 显示积分历史记录
+        function showHistory() {
+            // 计算统计信息
+            const totalPoints = calculateTotalPoints();
+            let earnedPoints = 0;
+            let deductedPoints = 0;
+            let exchangedPoints = 0;
+            
+            historyData.forEach(record => {
+                if (record.type === '获得') {
+                    earnedPoints += record.points;
+                } else if (record.type === '扣除') {
+                    deductedPoints += Math.abs(record.points);
+                } else if (record.type === '兑换') {
+                    exchangedPoints += Math.abs(record.points);
+                }
+            });
+            
+            // 更新统计显示
+            document.getElementById('historyTotalPoints').textContent = totalPoints;
+            document.getElementById('historyEarnedPoints').textContent = earnedPoints;
+            document.getElementById('historyDeductedPoints').textContent = deductedPoints;
+            document.getElementById('historyExchangedPoints').textContent = exchangedPoints;
+            
+            // 渲染历史记录表格
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+            
+            // 按日期倒序排列
+            const sortedHistory = [...historyData].sort((a, b) => {
+                if (a.date === b.date) {
+                    return b.time.localeCompare(a.time);
+                }
+                return b.date.localeCompare(a.date);
+            });
+            
+            sortedHistory.forEach(record => {
+                const row = document.createElement('tr');
+                const pointsClass = record.points > 0 ? 'positive-point' : 'negative-point';
+                const pointsSign = record.points > 0 ? '+' : '';
+                
+                row.innerHTML = `
+                    <td>${record.date}</td>
+                    <td>${record.time}</td>
+                    <td>${record.itemName}</td>
+                    <td>${record.type}</td>
+                    <td class="${pointsClass}">${pointsSign}${record.points}</td>
+                    <td>${record.cumulativePoints}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            if (historyData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 30px; color: #7f8c8d; font-style: italic;">
+                            暂无积分历史记录
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            openModal('historyModal');
+        }
+
+        // 导出历史记录为Excel
+        function exportHistoryToExcel() {
+            if (historyData.length === 0) {
+                alert('暂无历史记录可导出');
+                return;
+            }
+            
+            // 准备数据
+            const exportData = [
+                ['日期', '时间', '项目', '类型', '积分变化', '累计积分']
+            ];
+            
+            // 按日期倒序排列
+            const sortedHistory = [...historyData].sort((a, b) => {
+                if (a.date === b.date) {
+                    return b.time.localeCompare(a.time);
+                }
+                return b.date.localeCompare(a.date);
+            });
+            
+            sortedHistory.forEach(record => {
+                const pointsSign = record.points > 0 ? '+' : '';
+                exportData.push([
+                    record.date,
+                    record.time,
+                    record.itemName,
+                    record.type,
+                    `${pointsSign}${record.points}`,
+                    record.cumulativePoints
+                ]);
+            });
+            
+            // 添加统计信息
+            exportData.push([]);
+            exportData.push(['统计信息', '', '', '', '', '']);
+            
+            const totalPoints = calculateTotalPoints();
+            let earnedPoints = 0;
+            let deductedPoints = 0;
+            let exchangedPoints = 0;
+            
+            historyData.forEach(record => {
+                if (record.type === '获得') {
+                    earnedPoints += record.points;
+                } else if (record.type === '扣除') {
+                    deductedPoints += Math.abs(record.points);
+                } else if (record.type === '兑换') {
+                    exchangedPoints += Math.abs(record.points);
+                }
+            });
+            
+            exportData.push(['累计总积分', totalPoints, '', '', '', '']);
+            exportData.push(['获得总积分', earnedPoints, '', '', '', '']);
+            exportData.push(['扣除总积分', deductedPoints, '', '', '', '']);
+            exportData.push(['兑换消耗总积分', exchangedPoints, '', '', '', '']);
+            
+            // 创建工作簿和工作表
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(exportData);
+            
+            // 设置列宽
+            const wscols = [
+                {wch: 12}, // 日期
+                {wch: 8},  // 时间
+                {wch: 40}, // 项目
+                {wch: 10}, // 类型
+                {wch: 12}, // 积分变化
+                {wch: 12}  // 累计积分
+            ];
+            ws['!cols'] = wscols;
+            
+            // 添加工作表到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, "积分历史记录");
+            
+            // 生成文件名
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `家庭积分历史记录_${dateStr}.xlsx`;
+            
+            // 导出文件
+            XLSX.writeFile(wb, fileName);
+            
+            alert(`历史记录已导出为: ${fileName}`);
+        }
+
+        // 重置本周积分
+        function resetWeekScores() {
+            if (confirm('确定要重置本周积分吗？本周的所有积分记录将被清空，但历史记录会保留。')) {
+                const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                
+                // 重置项目计数
+                days.forEach(day => {
+                    scoreData.items.forEach(item => {
+                        if (item.counts[day] > 0) {
+                            // 添加历史记录（撤销本周积分）
+                            addHistoryRecord(item, -item.counts[day], day);
+                            item.counts[day] = 0;
+                        }
+                    });
+                });
+                
+                saveData();
+                renderCategories();
+                updateScores();
+                updateTotalPointsDisplay();
+            }
+        }
+
+        // 重置所有积分（累计积分）
+        function resetAllScores() {
+            if (confirm('确定要重置所有累计积分吗？这将清空所有历史记录和当前积分，此操作不可撤销！')) {
+                // 清空历史记录
+                historyData = [];
+                
+                // 重置项目计数
+                const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                days.forEach(day => {
+                    scoreData.items.forEach(item => {
+                        item.counts[day] = 0;
+                    });
+                    scoreData.dayScores[day] = 0;
+                });
+                
+                saveData();
+                renderCategories();
+                updateScores();
+                updateTotalPointsDisplay();
+                
+                alert('所有积分已重置！');
+            }
+        }
+
+        // 显示分类管理
+        function showCategoriesManagement() {
+            renderCategoriesList();
+            openModal('categoriesModal');
+        }
+
+        // 渲染分类列表
+        function renderCategoriesList() {
+            const container = document.getElementById('categoriesList');
+            container.innerHTML = '';
+            
+            // 统计每个分类下的项目数量
+            const categoryCounts = {};
+            scoreData.items.forEach(item => {
+                if (!categoryCounts[item.category]) {
+                    categoryCounts[item.category] = 0;
+                }
+                categoryCounts[item.category]++;
+            });
+            
+            // 渲染分类列表（使用保存的顺序）
+            categoryOrder.forEach(category => {
+                const count = categoryCounts[category] || 0;
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-item';
+                categoryDiv.dataset.category = category;
+                categoryDiv.draggable = true;
+                
+                categoryDiv.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <div class="drag-handle">
+                            <i class="fas fa-grip-vertical"></i>
+                        </div>
+                        <div>
+                            <div class="category-name">${category}</div>
+                            <div class="category-count">${count} 个项目</div>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="edit-rp-btn" data-action="edit-category">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-rp-btn" ${count > 0 ? 'disabled' : ''} data-action="delete-category">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+            
+            if (categoryOrder.length === 0) {
+                container.innerHTML = '<div class="empty-section">暂无分类，请添加新分类</div>';
+            }
+            
+            // 重置排序状态
+            hasSortChanged = false;
+            document.getElementById('saveSortBtn').disabled = true;
+            
+            // 添加事件监听器
+            attachCategoriesEventListeners();
+            attachDragAndDropListeners();
+        }
+
+        // 为分类管理添加事件监听器
+        function attachCategoriesEventListeners() {
+            // 编辑分类按钮
+            document.querySelectorAll('.edit-rp-btn[data-action="edit-category"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const categoryItem = this.closest('.category-item');
+                    const categoryName = categoryItem.dataset.category;
+                    editCategory(categoryName);
+                });
+            });
+            
+            // 删除分类按钮
+            document.querySelectorAll('.delete-rp-btn[data-action="delete-category"]').forEach(btn => {
+                if (btn.disabled) return;
+                
+                btn.addEventListener('click', function() {
+                    const categoryItem = this.closest('.category-item');
+                    const categoryName = categoryItem.dataset.category;
+                    
+                    if (confirm(`确定要删除分类【${categoryName}】吗？`)) {
+                        deleteCategory(categoryName);
+                    }
+                });
+            });
+        }
+
+        // 添加拖拽事件监听器
+        function attachDragAndDropListeners() {
+            const categoryItems = document.querySelectorAll('.category-item');
+            
+            categoryItems.forEach(item => {
+                // 开始拖拽
+                item.addEventListener('dragstart', function(e) {
+                    draggedItem = this;
+                    isDragging = true;
+                    setTimeout(() => {
+                        this.classList.add('dragging');
+                    }, 0);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                
+                // 拖拽结束
+                item.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                    isDragging = false;
+                    draggedItem = null;
+                    
+                    // 移除所有drag-over类
+                    document.querySelectorAll('.category-item').forEach(el => {
+                        el.classList.remove('drag-over');
+                    });
+                });
+                
+                // 拖拽经过
+                item.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    if (draggedItem !== this) {
+                        this.classList.add('drag-over');
+                    }
+                });
+                
+                // 拖拽离开
+                item.addEventListener('dragleave', function() {
+                    this.classList.remove('drag-over');
+                });
+                
+                // 放置
+                item.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    
+                    if (draggedItem !== this) {
+                        const container = this.parentNode;
+                        const items = Array.from(container.querySelectorAll('.category-item:not(.dragging)'));
+                        
+                        // 找到拖拽项和目标项的位置
+                        const draggedIndex = items.indexOf(draggedItem);
+                        const targetIndex = items.indexOf(this);
+                        
+                        if (draggedIndex < targetIndex) {
+                            // 向下拖拽
+                            container.insertBefore(draggedItem, this.nextSibling);
+                        } else {
+                            // 向上拖拽
+                            container.insertBefore(draggedItem, this);
+                        }
+                        
+                        // 标记排序已更改
+                        hasSortChanged = true;
+                        document.getElementById('saveSortBtn').disabled = false;
+                    }
+                });
+            });
+        }
+
+        // 保存排序
+        function saveCategorySort() {
+            if (!hasSortChanged) return;
+            
+            // 获取新的排序顺序
+            const container = document.getElementById('categoriesList');
+            const items = Array.from(container.querySelectorAll('.category-item'));
+            const newOrder = items.map(item => item.dataset.category);
+            
+            // 更新分类顺序
+            categoryOrder = newOrder;
+            
+            // 保存到本地存储
+            saveData();
+            
+            // 更新主页面分类显示
+            renderCategories();
+            
+            // 重置状态
+            hasSortChanged = false;
+            document.getElementById('saveSortBtn').disabled = true;
+            
+            alert('分类排序已保存！');
+        }
+
+        // 编辑分类
+        function editCategory(categoryName) {
+            document.getElementById('categoryModalTitle').textContent = '编辑分类';
+            document.getElementById('categoryName').value = categoryName;
+            document.getElementById('categoryIcon').value = categoryIcons[categoryName] || 'fas fa-list';
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('categoryForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const newName = document.getElementById('categoryName').value;
+                const icon = document.getElementById('categoryIcon').value;
+                
+                // 如果分类名已更改，需要更新所有项目的分类
+                if (newName !== categoryName) {
+                    scoreData.items.forEach(item => {
+                        if (item.category === categoryName) {
+                            item.category = newName;
+                        }
+                    });
+                    
+                    // 更新分类图标映射和顺序
+                    delete categoryIcons[categoryName];
+                    
+                    // 更新分类顺序
+                    const index = categoryOrder.indexOf(categoryName);
+                    if (index !== -1) {
+                        categoryOrder[index] = newName;
+                    }
+                }
+                
+                // 更新分类图标
+                categoryIcons[newName] = icon;
+                
+                saveData();
+                renderCategoriesList();
+                renderCategories();
+                closeModal('categoryModal');
+            };
+            
+            openModal('categoryModal');
+        }
+
+        // 删除分类
+        function deleteCategory(categoryName) {
+            // 删除分类图标
+            delete categoryIcons[categoryName];
+            
+            // 从分类顺序中移除
+            const index = categoryOrder.indexOf(categoryName);
+            if (index !== -1) {
+                categoryOrder.splice(index, 1);
+            }
+            
+            saveData();
+            renderCategoriesList();
+            renderCategories();
+        }
+
+        // 添加新分类
+        function addNewCategory() {
+            document.getElementById('categoryModalTitle').textContent = '添加新分类';
+            document.getElementById('categoryForm').reset();
+            
+            // 设置表单提交处理程序
+            const form = document.getElementById('categoryForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('categoryName').value;
+                const icon = document.getElementById('categoryIcon').value;
+                
+                // 检查分类是否已存在
+                if (categoryIcons[name]) {
+                    alert('该分类已存在！');
+                    return;
+                }
+                
+                // 添加新分类
+                categoryIcons[name] = icon;
+                categoryOrder.push(name);
+                
+                saveData();
+                renderCategoriesList();
+                closeModal('categoryModal');
+            };
+            
+            openModal('categoryModal');
+        }
+
+        // 打开模态框
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        // 关闭模态框
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'itemModal') {
+                document.getElementById('itemForm').reset();
+            } else if (modalId === 'rpModal') {
+                document.getElementById('rpForm').reset();
+            } else if (modalId === 'categoryModal') {
+                document.getElementById('categoryForm').reset();
+            } else if (modalId === 'categoriesModal') {
+                // 关闭分类管理时重置排序状态
+                hasSortChanged = false;
+            }
+        }
+
+        // 重置今日积分
+        function resetTodayScores() {
+            if (confirm('确定要重置今日积分吗？今日的积分记录将被清空。')) {
+                const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                const todayIndex = (currentDay === 7) ? 6 : currentDay - 1;
+                const today = days[todayIndex];
+                
+                // 重置项目计数
+                scoreData.items.forEach(item => {
+                    if (item.counts[today] > 0) {
+                        // 添加历史记录（撤销今日积分）
+                        addHistoryRecord(item, -item.counts[today], today);
+                        item.counts[today] = 0;
+                    }
+                });
+                
+                saveData();
+                renderCategories();
+                updateScores();
+                updateTotalPointsDisplay();
+            }
+        }
+
+        // 添加新积分项目
+        function addNewItem() {
+            document.getElementById('modalTitle').textContent = '添加新项目';
+            document.getElementById('itemForm').reset();
+            
+            // 动态生成分类选项
+            const categorySelect = document.getElementById('itemCategory');
+            categorySelect.innerHTML = '';
+            categoryOrder.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+            
+            const form = document.getElementById('itemForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('itemName').value;
+                const category = document.getElementById('itemCategory').value;
+                const points = parseInt(document.getElementById('itemPoints').value);
+                const type = document.getElementById('itemType').value;
+                
+                // 生成新ID
+                const newId = scoreData.items.length > 0 
+                    ? Math.max(...scoreData.items.map(item => item.id)) + 1 
+                    : 1;
+                
+                const newItem = {
+                    id: newId,
+                    name: name,
+                    category: category,
+                    points: type === 'negative' ? -Math.abs(points) : Math.abs(points),
+                    type: type,
+                    counts: { '周一': 0, '周二': 0, '周三': 0, '周四': 0, '周五': 0, '周六': 0, '周日': 0 }
+                };
+                
+                scoreData.items.push(newItem);
+                saveData();
+                renderCategories();
+                updateScores();
+                updateTotalPointsDisplay();
+                closeModal('itemModal');
+            };
+            
+            openModal('itemModal');
+        }
+
+        // 切换页面
+        function switchPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示目标页面
+            document.getElementById(`${pageId}-page`).classList.add('active');
+            
+            // 更新导航栏状态
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.page === pageId) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // 如果是兑换页面，重新渲染奖励和惩罚项
+            if (pageId === 'exchange') {
+                renderRewards();
+                renderPunishments();
+            }
+        }
+
+        // 初始化
+        function init() {
+            // 渲染初始数据
+            renderCategories();
+            updateScores();
+            updateTotalPointsDisplay();
+            renderRewards();
+            renderPunishments();
+            
+            // 周选择器事件
+            document.querySelectorAll('.week-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentWeek = this.dataset.week;
+                    // 这里可以扩展为切换不同周的数据
+                });
+            });
+            
+            // 重置今日积分按钮
+            document.getElementById('resetTodayBtn').addEventListener('click', resetTodayScores);
+            
+            // 重置本周积分按钮
+            document.getElementById('resetWeekBtn').addEventListener('click', resetWeekScores);
+            
+            // 重置所有积分按钮
+            document.getElementById('resetAllBtn').addEventListener('click', resetAllScores);
+            
+            // 添加新项目按钮
+            document.getElementById('addItemBtn').addEventListener('click', addNewItem);
+            
+            // 添加新奖励按钮
+            document.getElementById('addRewardBtn').addEventListener('click', addNewReward);
+            
+            // 添加新惩罚按钮
+            document.getElementById('addPunishmentBtn').addEventListener('click', addNewPunishment);
+            
+            // 前往兑换页面按钮
+            document.getElementById('goToExchangeBtn').addEventListener('click', function() {
+                switchPage('exchange');
+            });
+            
+            // 查看历史记录按钮
+            document.getElementById('showHistoryBtn').addEventListener('click', showHistory);
+            
+            // 导出历史记录按钮
+            document.getElementById('exportHistoryBtn').addEventListener('click', exportHistoryToExcel);
+            
+            // 管理分类按钮
+            document.getElementById('manageCategoriesBtn').addEventListener('click', showCategoriesManagement);
+            
+            // 添加新分类按钮
+            document.getElementById('addCategoryBtn').addEventListener('click', addNewCategory);
+            
+            // 保存排序按钮
+            document.getElementById('saveSortBtn').addEventListener('click', saveCategorySort);
+            
+            // 导航栏链接事件
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageId = this.dataset.page;
+                    switchPage(pageId);
+                });
+            });
+            
+            // 模态框关闭按钮
+            document.getElementById('closeItemModalBtn').addEventListener('click', function() {
+                closeModal('itemModal');
+            });
+            document.getElementById('cancelItemBtn').addEventListener('click', function() {
+                closeModal('itemModal');
+            });
+            
+            document.getElementById('closeRpModalBtn').addEventListener('click', function() {
+                closeModal('rpModal');
+            });
+            document.getElementById('cancelRpBtn').addEventListener('click', function() {
+                closeModal('rpModal');
+            });
+            
+            document.getElementById('closeHistoryModalBtn').addEventListener('click', function() {
+                closeModal('historyModal');
+            });
+            document.getElementById('cancelHistoryBtn').addEventListener('click', function() {
+                closeModal('historyModal');
+            });
+            
+            document.getElementById('closeCategoriesModalBtn').addEventListener('click', function() {
+                closeModal('categoriesModal');
+            });
+            document.getElementById('cancelCategoriesBtn').addEventListener('click', function() {
+                closeModal('categoriesModal');
+            });
+            
+            document.getElementById('closeCategoryModalBtn').addEventListener('click', function() {
+                closeModal('categoryModal');
+            });
+            document.getElementById('cancelCategoryBtn').addEventListener('click', function() {
+                closeModal('categoryModal');
+            });
+            
+            // 点击模态框外部关闭
+            document.getElementById('itemModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('itemModal');
+                }
+            });
+            
+            document.getElementById('rpModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('rpModal');
+                }
+            });
+            
+            document.getElementById('historyModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('historyModal');
+                }
+            });
+            
+            document.getElementById('categoriesModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('categoriesModal');
+                }
+            });
+            
+            document.getElementById('categoryModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal('categoryModal');
+                }
+            });
+            
+            // 检查是否需要初始化历史记录（如果数据迁移）
+            if (historyData.length === 0 && localStorage.getItem('familyTotalPoints')) {
+                // 迁移旧版数据
+                const oldTotalPoints = parseInt(localStorage.getItem('familyTotalPoints')) || 0;
+                if (oldTotalPoints > 0) {
+                    const now = new Date();
+                    const dateStr = now.toISOString().split('T')[0];
+                    const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+                    
+                    historyData.push({
+                        id: 1,
+                        date: dateStr,
+                        time: timeStr,
+                        day: '迁移',
+                        itemName: '历史积分迁移',
+                        itemId: 0,
+                        points: oldTotalPoints,
+                        type: '获得',
+                        cumulativePoints: oldTotalPoints
+                    });
+                    
+                    saveData();
+                }
+                
+                // 移除旧版数据
+                localStorage.removeItem('familyTotalPoints');
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
